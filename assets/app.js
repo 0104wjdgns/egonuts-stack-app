@@ -348,7 +348,7 @@
       actions.appendChild(n("button", { class: "primary" + (sharePdf ? "" : " wide"), text: "PDF 카드 저장", onclick: function () {
         EgoExport.download(pdf); say("PDF 카드를 저장했어요 (" + imgs.length + "쪽)");
       } }));
-      if (sharePdf) actions.appendChild(n("button", { class: "primary", text: "카카오톡 나에게 보내기", onclick: function () {
+      if (sharePdf) actions.appendChild(n("button", { class: "primary", text: "카카오톡 나에게로", onclick: function () {
         say(""); EgoExport.share([pdf], R.title).catch(onShareErr);
       } }));
     } else {
