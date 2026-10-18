@@ -1,0 +1,236 @@
+/* ============================================================
+   에고너츠 스택 — 공통 디자인
+   어둡고 몰입적인 미니멀 — 세리프 / 가는 선 포인트 / 은은한 애니메이션
+   배색은 회차 설정(main · point)에서 theme.js가 채운다.
+   --point  : 장식(구분선·인용 테두리·진행바)
+   --strong : 꼭 보여야 하는 요소(라벨·버튼·포커스)
+   ============================================================ */
+
+:root {
+  --bg:          #3d0f1c;
+  --bg-deep:     #340c18;
+  --ink:         #f4ece8;
+  --ink-soft:    rgba(244, 236, 232, 0.62);
+  --ink-faint:   rgba(244, 236, 232, 0.34);
+  --line:        rgba(244, 236, 232, 0.13);
+  --point:       #c9a35c;
+  --point-soft:  rgba(201, 163, 92, 0.55);
+  --strong:      #c9a35c;
+  --strong-soft: rgba(201, 163, 92, 0.55);
+  --maxw: 640px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: radial-gradient(125% 120% at 50% 0%, var(--bg) 0%, var(--bg-deep) 100%);
+  background-color: var(--bg-deep);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: "Noto Serif KR", ui-serif, Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(26px, 7vh, 84px) clamp(22px, 6vw, 40px) 104px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: opacity 0.17s ease, transform 0.17s ease;
+}
+.app.fade-out { opacity: 0; transform: translateY(6px); }
+
+/* ---- 진입 애니메이션 ---- */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(11px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fadeUp 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
+/* ---- 공통 텍스트 ---- */
+.kicker { font-size: 0.82rem; letter-spacing: 0.16em; color: var(--ink-faint); margin: 0 0 22px; }
+.question {
+  font-size: clamp(1.5rem, 4.6vw, 2.05rem);
+  font-weight: 500; line-height: 1.5; margin: 0 0 12px; letter-spacing: -0.01em;
+}
+.question.empty { color: var(--ink-faint); }
+.hint { font-size: 0.96rem; color: var(--ink-soft); margin: 0 0 30px; font-weight: 300; }
+.field-label { display: block; font-size: 0.99rem; color: var(--ink-soft); margin: 28px 0 10px; }
+.nudge { color: var(--strong); font-size: 0.92rem; font-weight: 400; margin: 16px 0 0; }
+
+/* ---- 입력 ---- */
+textarea, input[type="text"] {
+  width: 100%; background: transparent; color: var(--ink);
+  border: none; border-bottom: 1px solid var(--line);
+  font-family: inherit; font-size: 1.12rem; font-weight: 300; line-height: 1.75;
+  padding: 8px 2px 12px; resize: none; outline: none; border-radius: 0;
+  transition: border-color 0.25s ease;
+}
+textarea { min-height: 92px; overflow: hidden; }
+textarea::placeholder, input::placeholder { color: var(--ink-faint); font-weight: 300; }
+textarea:focus, input:focus { border-bottom-color: var(--strong); }
+input.name-input { font-size: 1.3rem; font-weight: 400; padding-bottom: 14px; }
+
+/* ---- 표지 겸 목차 ---- */
+.cover-rule { width: 46px; height: 2px; background: var(--point); border: none; margin: 0 0 30px; }
+.intro-core { margin: 6px 0 26px; }
+.core-label { font-size: 0.82rem; letter-spacing: 0.16em; color: var(--strong); font-weight: 500; margin: 0 0 12px; }
+.core-q { font-size: clamp(1.1rem, 3.2vw, 1.36rem); font-weight: 500; line-height: 1.6; color: var(--ink); margin: 0; }
+.toc { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.toc li {
+  display: flex; gap: 18px; align-items: baseline;
+  padding: 15px 0; border-bottom: 1px solid var(--line);
+}
+.toc .num { flex: none; width: 1.7em; font-size: 0.86rem; font-weight: 600; letter-spacing: 0.06em; color: var(--strong); }
+.toc .t { font-size: 1.04rem; font-weight: 400; line-height: 1.55; }
+.toc .t.empty { color: var(--ink-faint); font-weight: 300; }
+.cover-source { margin: 26px 0 0; font-size: 0.88rem; color: var(--ink-faint); font-weight: 300; line-height: 1.6; }
+
+/* ---- 진행 표시 ---- */
+.progress { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
+.progress .count { font-size: 0.8rem; letter-spacing: 0.08em; color: var(--ink-faint); white-space: nowrap; }
+.progress .bar { flex: 1; height: 1px; background: var(--line); position: relative; }
+.progress .bar span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--strong); transition: width 0.5s cubic-bezier(0.22, 0.61, 0.36, 1); box-shadow: 0 0 6px var(--strong-soft); }
+
+/* ---- 포인트 구분선 ---- */
+.point-rule {
+  border: none; height: 1px; margin: 30px 0;
+  background: linear-gradient(90deg, transparent, var(--point-soft) 18%, var(--point-soft) 82%, transparent);
+}
+
+/* ---- 참고 자료 페이지 ---- */
+.m-source { display: flex; gap: 16px; align-items: center; margin-top: 2px; }
+.m-source-cover { width: 96px; flex: none; display: block; border-radius: 3px; border: 1px solid var(--point-soft); }
+.m-source-meta { min-width: 0; }
+.m-source-title { font-size: 1.16rem; font-weight: 600; line-height: 1.35; margin: 0; }
+.m-source-title span { display: block; margin-top: 4px; font-size: 0.9rem; font-weight: 400; font-style: italic; color: var(--ink-soft); }
+.m-source-by { margin: 8px 0 0; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.02em; color: var(--strong); }
+.m-source-note { margin: 20px 0 0; font-size: 1rem; font-weight: 400; line-height: 1.7; color: var(--ink); }
+.m-imgwrap { margin-top: 2px; }
+.m-img {
+  display: block; width: 100%; max-height: 76vh; object-fit: contain;
+  border-radius: 5px; border: 1px solid var(--point-soft); background: rgba(0, 0, 0, 0.16);
+  opacity: 0; transform: translateY(8px) scale(1.006);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.m-img.shown { opacity: 1; transform: none; }
+.m-text { margin-top: 2px; }
+.m-loading { color: var(--ink-faint); font-weight: 300; font-size: 0.95rem; }
+.m-title {
+  font-size: clamp(1.32rem, 4.2vw, 1.68rem); font-weight: 600; letter-spacing: -0.01em;
+  margin: 0 0 22px; padding-bottom: 14px; position: relative;
+}
+.m-title::after { content: ""; position: absolute; left: 0; bottom: 0; width: 46px; height: 2px; background: var(--point); }
+.m-p { font-size: 1.06rem; font-weight: 400; line-height: 1.95; color: var(--ink); margin: 0 0 22px; }
+.m-p strong { font-weight: 600; color: var(--ink); }
+.m-quote {
+  margin: 26px 0; padding: 4px 0 4px 20px; border-left: 2px solid var(--point);
+  font-size: 1.05rem; line-height: 1.9; font-weight: 400; color: var(--ink);
+}
+.m-cite { margin: -10px 0 26px; text-align: right; font-size: 0.92rem; color: var(--strong); font-weight: 500; }
+
+/* ---- 버튼 / 내비 ---- */
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 44px; }
+.nav .spacer { flex: 1; }
+button {
+  background: none; border: none; color: var(--ink); font-family: inherit;
+  font-size: 1.05rem; font-weight: 400; cursor: pointer; padding: 8px 2px;
+  transition: color 0.25s ease, opacity 0.25s ease, border-color 0.25s ease;
+}
+button:hover { color: var(--strong); }
+button:disabled { opacity: 0.4; cursor: default; }
+.btn-back { color: var(--ink-soft); font-size: 0.98rem; font-weight: 300; }
+.btn-back:hover { color: var(--ink); }
+.btn-next { font-weight: 500; }
+.btn-start {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 1.08rem; font-weight: 500; padding: 12px 4px;
+}
+.btn-start .arrow {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid var(--strong-soft); color: var(--strong); font-size: 1.2rem;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+.btn-start:hover .arrow { background: var(--strong-soft); color: var(--bg-deep); }
+.btn-start:active .arrow { transform: scale(0.96); }
+.btn-text { font-size: 0.9rem; color: var(--ink-faint); font-weight: 300; text-decoration: underline; text-underline-offset: 4px; }
+
+/* ---- 안내 띠 (카카오톡 인앱 브라우저 등) ---- */
+.notice-bar {
+  border: 1px solid var(--strong-soft); border-radius: 6px;
+  padding: 14px 16px; margin: 0 0 30px;
+  font-size: 0.92rem; line-height: 1.65; font-weight: 300; color: var(--ink);
+}
+.notice-bar button { display: block; margin-top: 8px; padding: 2px 0; font-size: 0.95rem; font-weight: 500; color: var(--strong); }
+
+/* ---- 카드 덱 뷰어 ---- */
+.viewer { margin: 30px 0 0; }
+.track {
+  display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.track::-webkit-scrollbar { display: none; }
+.track img {
+  flex: 0 0 100%; width: 100%; aspect-ratio: 4 / 5; display: block;
+  scroll-snap-align: center; border-radius: 6px; border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  -webkit-touch-callout: default; user-select: none;
+}
+.viewer-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+.viewer-bar .count { font-size: 0.86rem; letter-spacing: 0.08em; color: var(--ink-soft); }
+.viewer-bar button { font-size: 1.3rem; padding: 4px 12px; color: var(--ink-soft); }
+.viewer-tip { font-size: 0.84rem; color: var(--ink-faint); font-weight: 300; margin: 6px 0 0; text-align: center; }
+
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 26px; }
+.actions button {
+  border: 1px solid var(--line); border-radius: 6px; padding: 14px 10px;
+  font-size: 0.98rem; font-weight: 500;
+}
+.actions button.primary { border-color: var(--strong-soft); color: var(--strong); }
+.actions button.wide { grid-column: 1 / -1; }
+.actions-status { min-height: 1.4em; font-size: 0.88rem; color: var(--ink-soft); font-weight: 300; margin: 12px 0 0; text-align: center; }
+
+/* ---- 인트로 / 완료 ---- */
+.lead { font-size: clamp(1.7rem, 5vw, 2.3rem); font-weight: 500; line-height: 1.45; margin: 0 0 18px; letter-spacing: -0.01em; }
+.sub { font-size: 1rem; color: var(--ink-soft); font-weight: 300; line-height: 1.8; margin: 0 0 38px; }
+.center { text-align: center; }
+.center .nav { justify-content: center; }
+.error { color: #e9a4a4; font-size: 0.95rem; font-weight: 300; margin-top: 20px; }
+
+/* ---- 완료: 마무리 인사 + 추천 도서 ---- */
+.closing { font-size: clamp(1.05rem, 3vw, 1.24rem); font-weight: 500; line-height: 1.75; color: var(--ink); margin: 18px 0 6px; }
+.books-label { font-size: 0.82rem; letter-spacing: 0.14em; color: var(--strong); font-weight: 500; margin: 22px 0 20px; }
+.books { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+.book { width: 148px; }
+.book .cover {
+  aspect-ratio: 2 / 3; border: 1px solid var(--point-soft); border-radius: 4px;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.book .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.book-title { font-size: 0.95rem; font-weight: 400; color: var(--ink); margin: 13px 0 0; }
+
+/* ---- 회차 목록 (index.html) ---- */
+.round-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.round-list a {
+  display: flex; align-items: baseline; gap: 18px; padding: 20px 2px;
+  border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none;
+}
+.round-list a:hover .round-title, .round-list a:hover .round-go { color: var(--strong); }
+.round-date { flex: none; font-size: 0.84rem; letter-spacing: 0.08em; color: var(--ink-faint); }
+.round-title { flex: 1; font-size: 1.2rem; font-weight: 500; }
+.round-go { color: var(--ink-soft); }
+
+@media (max-width: 480px) {
+  .app { justify-content: flex-start; padding-bottom: 80px; }
+  .m-p, .m-quote { font-size: 1.04rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up, .app, .m-img, .progress .bar span { animation: none !important; transition: none !important; }
+  .m-img { opacity: 1; transform: none; }
+}

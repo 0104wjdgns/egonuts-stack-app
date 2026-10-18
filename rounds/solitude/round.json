@@ -1,0 +1,14 @@
+{
+  "title": "고독과 상실",
+  "date": "2026.11",
+  "colors": { "main": "#2f4b60", "point": "#3b4046" },
+  "source": "무라카미 하루키 「토니 타키타니」 · 이치카와 준 감독 영화",
+  "questions": [
+    { "text": "", "short": "", "material": { "txt": "materials/q1.txt" } },
+    { "text": "", "short": "", "material": { "txt": "materials/q2.txt" } },
+    { "text": "", "short": "", "material": { "txt": "materials/q3.txt" } },
+    { "text": "", "short": "", "material": { "txt": "materials/q4.txt" } },
+    { "text": "", "short": "", "material": { "txt": "materials/q5.txt" } },
+    { "text": "", "short": "" }
+  ]
+}
