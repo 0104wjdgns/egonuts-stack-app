@@ -132,6 +132,11 @@ input.name-input { font-size: 1.3rem; font-weight: 400; padding-bottom: 14px; }
   font-size: 1.05rem; line-height: 1.9; font-weight: 400; color: var(--ink);
 }
 .m-cite { margin: -10px 0 26px; text-align: right; font-size: 0.92rem; color: var(--strong); font-weight: 500; }
+.m-wait {
+  margin: 34px 0 0; text-align: center; word-break: keep-all;
+  font-size: 0.88rem; font-weight: 300; line-height: 1.7; color: var(--ink-faint);
+  animation-delay: 0.6s;
+}
 
 /* ---- 버튼 / 내비 ---- */
 .nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 44px; }

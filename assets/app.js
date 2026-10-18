@@ -203,6 +203,7 @@
     }
     var textWrap = n("div", { class: "m-text" }, [n("p", { class: "m-loading", text: "자료를 불러오는 중…" })]);
     app.appendChild(textWrap);
+    if (R.materialNote) app.appendChild(n("p", { class: "m-wait fade-up", text: R.materialNote }));
 
     var back = n("button", { class: "btn-back", text: "← 뒤로", onclick: function () { go(idx - 1); } });
     var next = n("button", { class: "btn-next", text: "다음 →", onclick: function () { go(idx + 1); } });
