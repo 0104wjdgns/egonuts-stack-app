@@ -102,6 +102,7 @@ input.name-input { font-size: 1.3rem; font-weight: 400; padding-bottom: 14px; }
   border: none; height: 1px; margin: 30px 0;
   background: linear-gradient(90deg, transparent, var(--point-soft) 18%, var(--point-soft) 82%, transparent);
 }
+.point-rule.tight { margin: 14px 0; } /* 이미지 아래 → 글 사이 간격 */
 
 /* ---- 참고 자료 페이지 ---- */
 .m-source { display: flex; gap: 16px; align-items: center; margin-top: 2px; }
@@ -140,10 +141,15 @@ input.name-input { font-size: 1.3rem; font-weight: 400; padding-bottom: 14px; }
 .m-links { margin: 30px 0 0; }
 .m-links-label { font-size: 0.82rem; letter-spacing: 0.14em; color: var(--strong); font-weight: 500; margin: 0 0 12px; }
 .m-links a {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 15px 2px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 2px; border-bottom: 1px solid var(--line);
   color: var(--ink); text-decoration: none; font-size: 1.02rem;
 }
+.m-links .thumb {
+  flex: none; width: 120px; aspect-ratio: 16 / 9; object-fit: cover; display: block;
+  border-radius: 4px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.2);
+}
+.m-links .label { flex: 1; }
 .m-links a:first-of-type { border-top: 1px solid var(--line); }
 .m-links a:hover { color: var(--strong); }
 .m-links .go { color: var(--ink-soft); }

@@ -200,7 +200,7 @@
       var img = n("img", { class: "m-img", src: url(m.img), alt: "질문 " + (qi + 1) + " 참고 자료 이미지" });
       img.addEventListener("load", function () { img.classList.add("shown"); });
       var imgWrap = n("div", { class: "m-imgwrap fade-up" }, [img, creditLink("m-credit")]);
-      var imgRule = n("hr", { class: "point-rule" });
+      var imgRule = n("hr", { class: "point-rule tight" });
       img.addEventListener("error", function () { imgWrap.remove(); imgRule.remove(); });
       setTimeout(function () { if (img.complete && img.naturalWidth) img.classList.add("shown"); }, 40);
       app.appendChild(imgWrap);
@@ -212,8 +212,11 @@
       app.appendChild(n("div", { class: "m-links fade-up" }, [
         m.links.label ? n("p", { class: "m-links-label", text: m.links.label }) : null
       ].concat(m.links.items.map(function (l) {
+        var yt = youtubeId(l.url);
+        var thumb = yt ? n("img", { class: "thumb", src: "https://i.ytimg.com/vi/" + yt + "/mqdefault.jpg", alt: "", loading: "lazy" }) : null;
+        if (thumb) thumb.addEventListener("error", function () { thumb.remove(); });
         return n("a", { href: l.url, target: "_blank", rel: "noopener noreferrer" }, [
-          n("span", { text: l.text }), n("span", { class: "go", text: "↗" })
+          thumb, n("span", { class: "label", text: l.text }), n("span", { class: "go", text: "↗" })
         ]);
       }))));
     }
@@ -231,6 +234,12 @@
       if (!parsed.title && !parsed.blocks.length) { textWrap.appendChild(n("p", { class: "m-loading", text: "(인용문 준비 중)" })); return; }
       renderText(textWrap, parsed);
     });
+  }
+
+  // youtu.be/ID · youtube.com/watch?v=ID → ID (썸네일용)
+  function youtubeId(u) {
+    var m = /(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([\w-]{11})/.exec(u || "");
+    return m ? m[1] : null;
   }
 
   // 영화 이미지 출처 (round.json의 imageCredit)
