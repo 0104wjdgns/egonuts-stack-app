@@ -1,14 +1,50 @@
 {
   "title": "고독과 상실",
-  "date": "2026.11",
+  "date": "2026.10.18",
   "colors": { "main": "#2f4b60", "point": "#3b4046" },
   "source": "무라카미 하루키 「토니 타키타니」 · 이치카와 준 감독 영화",
   "questions": [
-    { "text": "", "short": "", "material": { "txt": "materials/q1.txt" } },
-    { "text": "", "short": "", "material": { "txt": "materials/q2.txt" } },
-    { "text": "", "short": "", "material": { "txt": "materials/q3.txt" } },
-    { "text": "", "short": "", "material": { "txt": "materials/q4.txt" } },
-    { "text": "", "short": "", "material": { "txt": "materials/q5.txt" } },
-    { "text": "", "short": "" }
+    {
+      "text": "고독을 오직 당신만의 언어로 정의한다면, 무엇이라 말하겠어요?",
+      "short": "나만의 언어로 정의하는 고독",
+      "hint": "이미지, 색깔, 음악, 한 문장 — 어떤 형태든 좋아요.",
+      "fields": [
+        { "label": "① 나에게 고독이란", "placeholder": "고독이란 …" },
+        { "label": "② 그렇게 생각한 이유" }
+      ],
+      "material": { "txt": "materials/q1.txt" }
+    },
+    {
+      "text": "고독은 인간이 끝내 벗어날 수 없는 존재의 바탕일까요, 아니면 넘어설 길이 있는 것일까요?",
+      "short": "고독은 존재의 바탕인가, 넘어설 수 있는가",
+      "material": { "txt": "materials/q2.txt" }
+    },
+    {
+      "text": "당신이 가장 고독했던 순간은 언제였나요?",
+      "short": "내가 가장 고독했던 순간",
+      "fields": [
+        { "label": "① 그때는 언제였나요?" },
+        { "label": "② 그때 당신의 마음은 어땠나요? (불안, 편안함, 후련함, 허전함 …)" }
+      ],
+      "material": { "txt": "materials/q3.txt" }
+    },
+    {
+      "text": "누군가는 옷에, 누군가는 재즈 레코드에, 누군가는 떠난 사람을 닮은 누군가에게 마음을 기댑니다. 허전함을 채우려 당신이 빠져들었던 것은 무엇이었나요?",
+      "short": "허전함을 채우려 빠져들었던 것",
+      "hint": "게임, 술, 자격증 공부 — 무엇이든 좋아요.",
+      "material": { "txt": "materials/q4.txt" }
+    },
+    {
+      "text": "상실과 고독을, 우리는 어떻게 마주해야 할까요?",
+      "short": "상실과 고독을 마주하는 방식",
+      "hint": "끝없이 새로운 자극을 찾기, 있는 그대로 받아들이기, 스스로 의미를 부여하기 — 혹은 당신만의 방식.",
+      "material": { "txt": "materials/q5.txt" }
+    },
+    {
+      "text": "고독과 상실을 지나온 지금, 당신 안에 남은 '나만의 질문' 하나는 무엇인가요?",
+      "short": "나만의 질문",
+      "hint": "결론이 아니라, 당신에게 남는 질문.",
+      "finale": true
+    }
   ]
 }

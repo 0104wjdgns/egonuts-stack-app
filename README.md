@@ -34,7 +34,7 @@ rounds/solitude/
 }
 ```
 
-`date`(표지 날짜)는 임시값이니 모임 날짜로 바꿔 주세요. 배색은 `colors.main`(배경) · `colors.point`(포인트).
+배색은 `colors.main`(배경) · `colors.point`(포인트).
 
 인용문 텍스트(`qN.txt`) 규칙: 첫 줄 = 제목, `"`로 시작 = 인용, `—`로 시작 = 출처, 나머지 = 문단, `**굵게**`.
 
