@@ -17,8 +17,9 @@ assets/export.js           PDF · 이미지 저장 · 공유 · 카카오톡 인
 rounds/solitude/
   round.json               발제문 설정 (질문 · 배색 · 참고 출처)
   materials/qN.txt         질문 N의 인용문
-  materials/qN.jpg         질문 N 자료 페이지 상단 이미지 (q1~q5, 자리 마련됨 — 파일만 넣으면 표시)
-  materials/cover.jpg      Q1 자료의 작품 소개 표지 (자리 마련됨)
+  materials/poster.jpg     Q1 자료 상단 — 영화 포스터
+  materials/q2~q5.jpg      Q2~Q5 자료 상단 — 영화 스틸컷 (출처 TMDB, round.json의 imageCredit)
+  materials/book.jpg       Q6 다음 페이지 — 『렉싱턴의 유령』 표지 + 추천 플레이리스트
 ```
 
 ## 발제문 채우기

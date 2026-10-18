@@ -199,7 +199,7 @@
     if (m.img) {
       var img = n("img", { class: "m-img", src: url(m.img), alt: "질문 " + (qi + 1) + " 참고 자료 이미지" });
       img.addEventListener("load", function () { img.classList.add("shown"); });
-      var imgWrap = n("div", { class: "m-imgwrap fade-up" }, [img]);
+      var imgWrap = n("div", { class: "m-imgwrap fade-up" }, [img, creditLink("m-credit")]);
       var imgRule = n("hr", { class: "point-rule" });
       img.addEventListener("error", function () { imgWrap.remove(); imgRule.remove(); });
       setTimeout(function () { if (img.complete && img.naturalWidth) img.classList.add("shown"); }, 40);
@@ -208,6 +208,16 @@
     }
     var textWrap = n("div", { class: "m-text" }, [n("p", { class: "m-loading", text: "자료를 불러오는 중…" })]);
     app.appendChild(textWrap);
+    if (m.links && m.links.items && m.links.items.length) {
+      app.appendChild(n("div", { class: "m-links fade-up" }, [
+        m.links.label ? n("p", { class: "m-links-label", text: m.links.label }) : null
+      ].concat(m.links.items.map(function (l) {
+        return n("a", { href: l.url, target: "_blank", rel: "noopener noreferrer" }, [
+          n("span", { text: l.text }), n("span", { class: "go", text: "↗" })
+        ]);
+      }))));
+    }
+    if (m.credit) app.appendChild(creditLink("m-credit m-credit-page fade-up"));
     if (R.materialNote) app.appendChild(n("p", { class: "m-wait fade-up", text: R.materialNote }));
 
     var back = n("button", { class: "btn-back", text: "← 뒤로", onclick: function () { go(idx - 1); } });
@@ -221,6 +231,15 @@
       if (!parsed.title && !parsed.blocks.length) { textWrap.appendChild(n("p", { class: "m-loading", text: "(인용문 준비 중)" })); return; }
       renderText(textWrap, parsed);
     });
+  }
+
+  // 영화 이미지 출처 (round.json의 imageCredit)
+  function creditLink(cls) {
+    var c = R.imageCredit;
+    if (!c) return null;
+    return n("p", { class: cls }, [
+      c.url ? n("a", { href: c.url, target: "_blank", rel: "noopener noreferrer", text: c.text }) : n("span", { text: c.text })
+    ]);
   }
 
   function loadText(u, cb) {
