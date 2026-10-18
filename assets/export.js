@@ -1,6 +1,6 @@
 /* ============================================================
    에고너츠 스택 — 카드 내보내기
-   - 이미지: 카드마다 JPG
+   - 이미지: 카드마다 PNG
    - PDF:   카드 크기 그대로 한 장씩 (jsPDF)
    - 공유:   휴대폰 공유 시트(Web Share) → 카카오톡 '나와의 채팅' 등
    - 카카오톡 인앱 브라우저는 파일 저장이 막히는 경우가 많아 외부 브라우저로 넘긴다.
@@ -10,14 +10,14 @@
 
   function toBlob(canvas) {
     return new Promise(function (resolve, reject) {
-      canvas.toBlob(function (b) { b ? resolve(b) : reject(new Error("이미지를 만들지 못했어요")); }, "image/jpeg", 0.93);
+      canvas.toBlob(function (b) { b ? resolve(b) : reject(new Error("이미지를 만들지 못했어요")); }, "image/png");
     });
   }
 
   function images(cards, base) {
     return Promise.all(cards.map(function (c) {
       return toBlob(c.canvas).then(function (b) {
-        return new File([b], base + "_" + c.label + ".jpg", { type: "image/jpeg" });
+        return new File([b], base + "_" + c.label + ".png", { type: "image/png" });
       });
     }));
   }

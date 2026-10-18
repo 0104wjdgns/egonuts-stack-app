@@ -345,20 +345,20 @@
     function onShareErr(e) { if (!e || e.name !== "AbortError") say("공유하지 못했어요. 저장 버튼을 이용해 주세요."); }
 
     if (pdfOk) {
-      actions.appendChild(n("button", { class: "primary" + (sharePdf ? "" : " wide"), text: "PDF 저장", onclick: function () {
-        EgoExport.download(pdf); say("PDF를 저장했어요 (" + imgs.length + "쪽)");
+      actions.appendChild(n("button", { class: "primary" + (sharePdf ? "" : " wide"), text: "PDF 카드 저장", onclick: function () {
+        EgoExport.download(pdf); say("PDF 카드를 저장했어요 (" + imgs.length + "쪽)");
       } }));
-      if (sharePdf) actions.appendChild(n("button", { class: "primary", text: "PDF 보내기", onclick: function () {
+      if (sharePdf) actions.appendChild(n("button", { class: "primary", text: "카카오톡 나에게 보내기", onclick: function () {
         say(""); EgoExport.share([pdf], R.title).catch(onShareErr);
       } }));
     } else {
       say(pdf && pdf.message ? pdf.message : "PDF를 만들지 못했어요.");
     }
-    actions.appendChild(n("button", { class: shareImgs ? "" : "wide", text: "이미지 " + imgs.length + "장 저장", onclick: function () {
+    actions.appendChild(n("button", { class: shareImgs ? "" : "wide", text: "PNG 이미지로 저장", onclick: function () {
       say("이미지를 저장하는 중…");
-      EgoExport.downloadAll(imgs).then(function () { say("이미지 " + imgs.length + "장을 저장했어요"); });
+      EgoExport.downloadAll(imgs).then(function () { say("PNG 이미지 " + imgs.length + "장을 저장했어요"); });
     } }));
-    if (shareImgs) actions.appendChild(n("button", { text: "이미지 보내기", onclick: function () {
+    if (shareImgs) actions.appendChild(n("button", { text: "이미지 공유", onclick: function () {
       say(""); EgoExport.share(imgs, R.title).catch(onShareErr);
     } }));
   }

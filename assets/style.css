@@ -189,7 +189,7 @@ button:disabled { opacity: 0.4; cursor: default; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 26px; }
 .actions button {
   border: 1px solid var(--line); border-radius: 6px; padding: 14px 10px;
-  font-size: 0.98rem; font-weight: 500;
+  font-size: 0.98rem; font-weight: 500; line-height: 1.45; word-break: keep-all;
 }
 .actions button.primary { border-color: var(--strong-soft); color: var(--strong); }
 .actions button.wide { grid-column: 1 / -1; }
