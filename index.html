@@ -3,36 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#2a2a2e" />
-  <title>에고너츠 스택</title>
-  <meta name="description" content="에고너츠 철학 모임 발제문 목록" />
+  <meta name="theme-color" content="#2f4b60" />
+  <title>고독과 상실 — 에고너츠</title>
+  <meta name="description" content="에고너츠 「고독과 상실」 발제문 — 내 답안을 카드 덱으로 남겨요" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/style.css" />
 </head>
 <body>
-  <main class="app">
-    <p class="kicker">EGONUTS</p>
-    <p class="lead">에고너츠 스택</p>
-    <p class="sub">회차를 골라 발제문에 답하고, 나만의 카드 덱으로 가져가세요.</p>
-    <ol id="rounds" class="round-list"></ol>
-  </main>
-  <script src="/assets/theme.js"></script>
-  <script>
-    EgoTheme.apply(EgoTheme.palette({ main: "#2a2a2e", point: "#b8b2a7" }));
-    fetch("/rounds/index.json").then(function (r) { return r.json(); }).then(function (list) {
-      var ol = document.getElementById("rounds");
-      list.forEach(function (it) {
-        var li = document.createElement("li");
-        var a = document.createElement("a");
-        a.href = "/round.html?r=" + encodeURIComponent(it.slug);
-        a.innerHTML = "<span class=\"round-date\"></span><span class=\"round-title\"></span><span class=\"round-go\">→</span>";
-        a.querySelector(".round-date").textContent = it.date || "";
-        a.querySelector(".round-title").textContent = it.title;
-        li.appendChild(a); ol.appendChild(li);
-      });
-    });
-  </script>
+  <main id="app" class="app"></main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="/assets/theme.js" defer></script>
+  <script src="/assets/cards.js" defer></script>
+  <script src="/assets/export.js" defer></script>
+  <script src="/assets/app.js" defer></script>
 </body>
 </html>

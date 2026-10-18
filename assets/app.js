@@ -1,16 +1,15 @@
 /* ============================================================
    에고너츠 스택 — 발제문 흐름
    표지 겸 목차 → (질문 → 참고 자료)… → 카드에 넣을 이름 → 카드 덱
-   - 회차 설정: /rounds/<slug>/round.json  (주소: /<slug> 또는 /round.html?r=<slug>)
+   - 회차 설정: /rounds/<slug>/round.json  (기본 회차: DEFAULT_ROUND, 다른 회차는 /?r=<slug>)
    - 질문에 답을 써야 다음(참고 자료)으로 진행 (답 쓴 뒤에만 자료 공개)
    - 작성 중인 답은 이 기기에만 저장. 서버로 보내지 않는다.
    ============================================================ */
 (function () {
   "use strict";
 
-  var params = new URLSearchParams(location.search);
-  var slug = params.get("r") || location.pathname.replace(/^\/+|\/+$/g, "").split("/")[0];
-  if (!slug || /\.html$/.test(slug)) { location.replace("/"); return; }
+  var DEFAULT_ROUND = "solitude";
+  var slug = new URLSearchParams(location.search).get("r") || DEFAULT_ROUND;
   var BASE = "/rounds/" + encodeURIComponent(slug) + "/";
   var STORE_KEY = "egonuts-stack-" + slug;
 
@@ -367,8 +366,7 @@
   function renderMissing() {
     app.appendChild(n("div", { class: "center" }, [
       n("p", { class: "lead", text: "회차를 찾을 수 없어요" }),
-      n("p", { class: "sub", text: "주소를 다시 확인해 주세요." }),
-      n("div", { class: "nav" }, [n("button", { class: "btn-next", text: "회차 목록 →", onclick: function () { location.href = "/"; } })])
+      n("p", { class: "sub", text: "주소를 다시 확인해 주세요." })
     ]));
   }
 

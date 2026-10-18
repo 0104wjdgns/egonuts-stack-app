@@ -214,17 +214,6 @@ button:disabled { opacity: 0.4; cursor: default; }
 .book .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .book-title { font-size: 0.95rem; font-weight: 400; color: var(--ink); margin: 13px 0 0; }
 
-/* ---- 회차 목록 (index.html) ---- */
-.round-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-.round-list a {
-  display: flex; align-items: baseline; gap: 18px; padding: 20px 2px;
-  border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none;
-}
-.round-list a:hover .round-title, .round-list a:hover .round-go { color: var(--strong); }
-.round-date { flex: none; font-size: 0.84rem; letter-spacing: 0.08em; color: var(--ink-faint); }
-.round-title { flex: 1; font-size: 1.2rem; font-weight: 500; }
-.round-go { color: var(--ink-soft); }
-
 @media (max-width: 480px) {
   .app { justify-content: flex-start; padding-bottom: 80px; }
   .m-p, .m-quote { font-size: 1.04rem; }
