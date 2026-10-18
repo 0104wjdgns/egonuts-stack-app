@@ -181,10 +181,13 @@
     var pct = Math.round((idx / LAST) * 100);
 
     app.appendChild(progress("질문 " + (qi + 1) + " · 참고 자료", pct));
+    // 이미지 자리: 파일이 아직 없으면 자리째 숨긴다 (파일만 넣으면 나타남)
     if (m.source) {
       var s = m.source;
+      var cover = s.cover ? n("img", { class: "m-source-cover", src: url(s.cover), alt: (s.titleKo || "") + " 표지" }) : null;
+      if (cover) cover.addEventListener("error", function () { cover.remove(); });
       app.appendChild(n("div", { class: "m-source fade-up" }, [
-        s.cover ? n("img", { class: "m-source-cover", src: url(s.cover), alt: (s.titleKo || "") + " 표지" }) : null,
+        cover,
         n("div", { class: "m-source-meta" }, [
           n("p", { class: "m-source-title", html: escapeHtml(s.titleKo || "") + (s.titleEn ? "<span>" + escapeHtml(s.titleEn) + "</span>" : "") }),
           s.by ? n("p", { class: "m-source-by", text: s.by }) : null
@@ -196,10 +199,12 @@
     if (m.img) {
       var img = n("img", { class: "m-img", src: url(m.img), alt: "질문 " + (qi + 1) + " 참고 자료 이미지" });
       img.addEventListener("load", function () { img.classList.add("shown"); });
-      img.addEventListener("error", function () { img.style.display = "none"; });
+      var imgWrap = n("div", { class: "m-imgwrap fade-up" }, [img]);
+      var imgRule = n("hr", { class: "point-rule" });
+      img.addEventListener("error", function () { imgWrap.remove(); imgRule.remove(); });
       setTimeout(function () { if (img.complete && img.naturalWidth) img.classList.add("shown"); }, 40);
-      app.appendChild(n("div", { class: "m-imgwrap fade-up" }, [img]));
-      app.appendChild(n("hr", { class: "point-rule" }));
+      app.appendChild(imgWrap);
+      app.appendChild(imgRule);
     }
     var textWrap = n("div", { class: "m-text" }, [n("p", { class: "m-loading", text: "자료를 불러오는 중…" })]);
     app.appendChild(textWrap);

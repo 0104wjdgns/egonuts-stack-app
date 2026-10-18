@@ -17,7 +17,8 @@ assets/export.js           PDF · 이미지 저장 · 공유 · 카카오톡 인
 rounds/solitude/
   round.json               발제문 설정 (질문 · 배색 · 참고 출처)
   materials/qN.txt         질문 N의 인용문
-  materials/qN.jpg         질문 N의 자료 이미지 (선택, 넣으면 round.json에 "img" 추가)
+  materials/qN.jpg         질문 N 자료 페이지 상단 이미지 (q1~q5, 자리 마련됨 — 파일만 넣으면 표시)
+  materials/cover.jpg      Q1 자료의 작품 소개 표지 (자리 마련됨)
 ```
 
 ## 발제문 채우기
