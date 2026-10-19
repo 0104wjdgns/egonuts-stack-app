@@ -93,7 +93,7 @@
   }
 
   // --- 표지 겸 목차 ---
-  function coverPage(ctx, R, name) {
+  function coverPage(ctx, R, name, subtitle) {
     var qs = R.questions;
     var tocW = W - 2 * PX - 86;
 
@@ -135,7 +135,7 @@
 
       ctx.font = font(300, 32);
       ctx.fillStyle = p.inkSoft;
-      ctx.fillText(ellipsize(ctx, name ? name + "의 토론 로그" : "나의 토론 로그", W - 2 * PX), PX, titleBottom + 122);
+      ctx.fillText(ellipsize(ctx, subtitle || (name ? name + "의 토론 로그" : "나의 토론 로그"), W - 2 * PX), PX, titleBottom + 122);
 
       var y = tocTop, L = layout;
       ctx.fillStyle = p.line;
@@ -298,6 +298,26 @@
         ctx.font = font(400, r.s);
         ctx.fillStyle = r.empty ? p.inkFaint : p.ink;
         ctx.fillText(r.text, PX + 34, y + r.h / 2);
+      } else if (r.kind === "text") {            // 일반 글줄: weight · color · indent · align 지정
+        ctx.font = font(r.w || 400, r.s);
+        ctx.fillStyle = p[r.color || "ink"];
+        if (r.align === "right") { ctx.textAlign = "right"; ctx.fillText(r.text, W - PX, y + r.h / 2); ctx.textAlign = "left"; }
+        else ctx.fillText(r.text, PX + (r.indent || 0), y + r.h / 2);
+      } else if (r.kind === "quote") {
+        ctx.fillStyle = p.point;
+        ctx.fillRect(PX, y, 2, r.h);
+        ctx.font = font(400, r.s);
+        ctx.fillStyle = p.ink;
+        ctx.fillText(r.text, PX + 28, y + r.h / 2);
+      } else if (r.kind === "titlebar") {
+        ctx.fillStyle = p.point;
+        ctx.fillRect(PX, y + 6, 46, 2);
+      } else if (r.kind === "image") {
+        var x = r.align === "left" ? PX : (W - r.w) / 2;
+        ctx.drawImage(r.img, x, y, r.w, r.h);
+        ctx.strokeStyle = p.pointSoft;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, r.w - 1, r.h - 1);
       }
       y += r.h;
     });
@@ -344,5 +364,158 @@
     });
   }
 
-  window.EgoCards = { build: build, fieldName: fieldName, W: W, H: H };
+  // ============================================================
+  // 발제문 전체 덱 (관리자용): 표지 + 질문 카드(답 없이) + 참고 자료 카드
+  // ============================================================
+  var CW = W - 2 * PX;
+  function plain(s) { return String(s || "").replace(/\*\*(.+?)\*\*/g, "$1"); }
+  function textRows(ctx, rows, text, s, opt) {
+    opt = opt || {};
+    var lh = Math.round(s * (opt.lh || 1.7));
+    ctx.font = font(opt.w || 400, s);
+    wrap(ctx, plain(text), CW - (opt.indent || 0)).forEach(function (l) {
+      rows.push({ kind: opt.kind || "text", text: l, s: s, h: l === "" ? Math.round(lh * 0.5) : lh,
+        w: opt.w, color: opt.color, indent: opt.indent, align: opt.align });
+    });
+  }
+  // 이미지를 (maxW × maxH) 안에 비율 유지해 맞춤
+  function imageRow(img, maxW, maxH, align) {
+    var r = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+    return { kind: "image", img: img, w: Math.round(img.naturalWidth * r), h: Math.round(img.naturalHeight * r), align: align };
+  }
+
+  function questionOnlyPage(ctx, R, q, qi) {
+    var head = questionHeader(ctx, q, qi);
+    var rows = [];
+    if (q.hint) { textRows(ctx, rows, q.hint, 30, { w: 300, color: "inkSoft", lh: 1.6 }); rows.push({ kind: "gap", h: 34 }); }
+    var fields = q.fields || [{}];
+    if (fields.length > 1) fields.forEach(function (f) {
+      if (!f.label) return;
+      textRows(ctx, rows, f.label, 30, { w: 500, color: "strong", lh: 1.55 });
+      rows.push({ kind: "gap", h: 18 });
+    });
+    return function (ctx, p, page, total) {
+      var y = drawQuestionTop(ctx, p, q, qi, head, false);
+      drawRows(ctx, p, rows, y);
+      footer(ctx, p, R.title + " · 발제문", page, total);
+    };
+  }
+
+  function materialRows(ctx, R, m, mat) {
+    var rows = [];
+    var s = m.source;
+    if (s) {
+      if (mat.cover) { rows.push(imageRow(mat.cover, CW, 380, "left")); rows.push({ kind: "gap", h: 28 }); }
+      textRows(ctx, rows, s.titleKo, 40, { w: 600, lh: 1.4 });
+      if (s.titleEn) textRows(ctx, rows, s.titleEn, 26, { color: "inkSoft", lh: 1.6 });
+      if (s.by) textRows(ctx, rows, s.by, 26, { w: 500, color: "strong", lh: 1.6 });
+      if (s.note) { rows.push({ kind: "gap", h: 22 }); textRows(ctx, rows, s.note, 28, { lh: 1.75 }); }
+      rows.push({ kind: "gap", h: 40 });
+    }
+    if (mat.img) {
+      rows.push(imageRow(mat.img, CW, 620, "center"));
+      if (R.imageCredit) textRows(ctx, rows, R.imageCredit.text, 20, { w: 300, color: "inkFaint", align: "right", lh: 1.9 });
+      rows.push({ kind: "gap", h: 26 });
+    }
+    var t = mat.parsed;
+    if (t) {
+      if (t.title) {
+        textRows(ctx, rows, t.title, 40, { w: 600, lh: 1.45 });
+        rows.push({ kind: "titlebar", h: 34 });
+      }
+      t.blocks.forEach(function (b) {
+        if (b.t === "quote") { textRows(ctx, rows, b.text, 29, { kind: "quote", indent: 28, lh: 1.72 }); rows.push({ kind: "gap", h: 8 }); }
+        else if (b.t === "cite") { textRows(ctx, rows, "— " + b.text, 24, { w: 500, color: "strong", align: "right", lh: 1.7 }); rows.push({ kind: "gap", h: 22 }); }
+        else { textRows(ctx, rows, b.text, 29, { lh: 1.72 }); rows.push({ kind: "gap", h: 22 }); }
+      });
+    }
+    if (m.links && m.links.items) {
+      if (m.links.label) { textRows(ctx, rows, m.links.label, 24, { w: 500, color: "strong", lh: 1.7 }); rows.push({ kind: "gap", h: 6 }); }
+      m.links.items.forEach(function (l) {
+        textRows(ctx, rows, "· " + l.text, 29, { lh: 1.6 });
+        textRows(ctx, rows, String(l.url).replace(/^https?:\/\//, "").replace(/\?.*$/, ""), 22, { w: 300, color: "inkFaint", indent: 26, lh: 1.6 });
+        rows.push({ kind: "gap", h: 12 });
+      });
+    }
+    if (m.credit && !mat.img && R.imageCredit) { rows.push({ kind: "gap", h: 16 }); textRows(ctx, rows, R.imageCredit.text, 22, { w: 300, color: "inkFaint", lh: 1.7 }); }
+    while (rows.length && rows[rows.length - 1].kind === "gap") rows.pop();
+    return rows;
+  }
+
+  function drawMaterialTop(ctx, p, qi, cont) {
+    background(ctx, p);
+    ctx.font = font(600, 34);
+    ctx.fillStyle = p.strong;
+    var w = spaced(ctx, "Q" + (qi + 1), PX, TOP, 3);
+    ctx.font = font(400, 26);
+    ctx.fillStyle = p.inkFaint;
+    ctx.fillText("  ·  참고 자료" + (cont ? "  ·  이어서" : ""), PX + w, TOP);
+    ctx.font = font(500, 22);
+    spaced(ctx, "EGONUTS", W - PX, TOP, 5, "right");
+    ctx.fillStyle = p.point;
+    ctx.fillRect(PX, TOP + 30, 48, 2);
+    return TOP + 96;
+  }
+
+  function materialPages(ctx, R, q, qi, mat) {
+    var rows = materialRows(ctx, R, q.material, mat);
+    var top = TOP + 96, limit = BODY_BOTTOM - top;
+    var chunks = [], cur = [], used = 0;
+    rows.forEach(function (r) {
+      if (!cur.length && r.kind === "gap") return;
+      if (used + r.h > limit && cur.length) {
+        // 제목이 페이지 끝에 홀로 남지 않도록 함께 넘긴다
+        var carry = [];
+        var isHead = function (x) { return x.kind === "titlebar" || (x.kind === "text" && x.w === 600); };
+        while (cur.length && isHead(cur[cur.length - 1])) carry.unshift(cur.pop());
+        if (!cur.length) { cur = carry; carry = []; }
+        chunks.push(cur); cur = carry; used = rowsHeight(carry);
+        if (r.kind === "gap") return;
+      }
+      cur.push(r); used += r.h;
+    });
+    if (cur.length) chunks.push(cur);
+    return chunks.map(function (chunk, ci) {
+      return function (ctx, p, page, total) {
+        var y = drawMaterialTop(ctx, p, qi, ci > 0);
+        drawRows(ctx, p, chunk, y);
+        footer(ctx, p, R.title + " · 발제문", page, total);
+      };
+    });
+  }
+
+  // mats[qi] = { parsed, img, cover } (참고 자료가 없는 질문은 null) → [{ canvas, label }]
+  function buildFull(R, mats, palette) {
+    var texts = [R.title, R.source || "", "발제문"];
+    R.questions.forEach(function (q, qi) {
+      texts.push(q.text || "", q.short || "", q.hint || "");
+      (q.fields || []).forEach(function (f) { texts.push(f.label || ""); });
+      var m = q.material, mat = mats[qi];
+      if (m && m.source) texts.push(m.source.titleKo || "", m.source.titleEn || "", m.source.by || "", m.source.note || "");
+      if (m && m.links) texts.push(m.links.label || "", JSON.stringify(m.links.items || []));
+      if (mat && mat.parsed) texts.push(mat.parsed.title, mat.parsed.blocks.map(function (b) { return b.text; }).join(" "));
+    });
+    if (R.imageCredit) texts.push(R.imageCredit.text);
+    return loadFonts(texts).then(function () {
+      var scratch = document.createElement("canvas").getContext("2d");
+      var pages = [{ label: "00_표지", draw: coverPage(scratch, R, "", "발제문") }];
+      R.questions.forEach(function (q, qi) {
+        var num = (qi + 1 < 10 ? "0" : "") + (qi + 1);
+        pages.push({ label: num + "_Q" + (qi + 1), draw: questionOnlyPage(scratch, R, q, qi) });
+        if (q.material && mats[qi]) {
+          materialPages(scratch, R, q, qi, mats[qi]).forEach(function (draw, k) {
+            pages.push({ label: num + "_Q" + (qi + 1) + "_자료" + (k ? "-" + (k + 1) : ""), draw: draw });
+          });
+        }
+      });
+      return pages.map(function (pg, i) {
+        var c = document.createElement("canvas");
+        c.width = W; c.height = H;
+        pg.draw(c.getContext("2d"), palette, i + 1, pages.length);
+        return { canvas: c, label: pg.label };
+      });
+    });
+  }
+
+  window.EgoCards = { build: build, buildFull: buildFull, fieldName: fieldName, W: W, H: H };
 })();

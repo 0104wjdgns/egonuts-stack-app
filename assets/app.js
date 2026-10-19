@@ -13,6 +13,18 @@
   var BASE = "/rounds/" + encodeURIComponent(slug) + "/";
   var STORE_KEY = "egonuts-stack-" + slug;
 
+  // 관리자 모드: 주소에 ?admin=1 을 붙여 한 번 열면 이 기기에서 켜지고, ?admin=0 이면 꺼진다.
+  // 서버도 계정도 없는 '숨김 스위치'일 뿐 — 공개된 발제문 내용만 다루므로 보안 장치는 아니다.
+  var ADMIN_KEY = "egonuts-stack-admin";
+  var adminParam = new URLSearchParams(location.search).get("admin");
+  try {
+    if (adminParam === "1") localStorage.setItem(ADMIN_KEY, "1");
+    else if (adminParam === "0") localStorage.removeItem(ADMIN_KEY);
+  } catch (e) {}
+  function isAdmin() {
+    try { return localStorage.getItem(ADMIN_KEY) === "1"; } catch (e) { return adminParam === "1"; }
+  }
+
   var app = document.getElementById("app");
   var R, PAL, QUESTIONS, STEPS, LAST, NQ;
   var idx = 0;
@@ -132,6 +144,11 @@
       n("span", { class: "arrow", text: "→" })
     ]);
     app.appendChild(n("div", { class: "nav fade-up" }, [left, start]));
+    if (isAdmin()) {
+      app.appendChild(n("div", { class: "admin-row fade-up" }, [
+        n("button", { class: "btn-text", text: "관리자 · 발제문 전체 카드 추출", onclick: function () { transition(renderFullExport); } })
+      ]));
+    }
   }
 
   // --- 질문 ---
@@ -342,6 +359,53 @@
         showViewer(viewer, imgs);
         var pdfP = EgoExport.pdf(cards, base).catch(function (e) { return e; });
         return pdfP.then(function (pdf) { showActions(actions, status, imgs, pdf); });
+      });
+    }).catch(function (e) {
+      viewer.innerHTML = "";
+      viewer.appendChild(n("p", { class: "error", text: "카드를 만들지 못했어요: " + (e && e.message ? e.message : e) }));
+    });
+  }
+
+  // --- 관리자: 발제문 전체(표지 · 질문 · 참고 자료)를 카드로 ---
+  function loadImg(src) {
+    return new Promise(function (resolve) {
+      var im = new Image();
+      im.onload = function () { resolve(im); };
+      im.onerror = function () { resolve(null); };
+      im.src = src;
+    });
+  }
+  function renderFullExport() {
+    app.appendChild(n("p", { class: "kicker fade-up", text: "관리자" }));
+    app.appendChild(n("p", { class: "lead fade-up", text: "발제문 전체 카드" }));
+    app.appendChild(n("p", { class: "sub fade-up", text: "표지 · 질문 · 참고 자료를 모두 카드로 만들어요. 답변은 들어가지 않아요." }));
+    var viewer = n("div", { class: "viewer fade-up" }, [n("p", { class: "m-loading", text: "카드를 만드는 중…" })]);
+    var actions = n("div", { class: "actions" });
+    var status = n("p", { class: "actions-status" });
+    app.appendChild(viewer);
+    app.appendChild(actions);
+    app.appendChild(status);
+    app.appendChild(n("div", { class: "nav" }, [
+      n("button", { class: "btn-back", text: "← 표지로", onclick: function () { go(0); } }),
+      n("span", { class: "spacer" })
+    ]));
+
+    var mats = QUESTIONS.map(function (q) {
+      var m = q.material;
+      if (!m) return Promise.resolve(null);
+      return Promise.all([
+        m.txt ? new Promise(function (res) { loadText(url(m.txt), function (p, err) { res(err ? null : p); }); }) : null,
+        m.img ? loadImg(url(m.img)) : null,
+        m.source && m.source.cover ? loadImg(url(m.source.cover)) : null
+      ]).then(function (r) { return { parsed: r[0], img: r[1], cover: r[2] }; });
+    });
+    var base = "egonuts_" + EgoExport.safeName(R.title) + "_발제문";
+    Promise.all(mats).then(function (list) {
+      return EgoCards.buildFull(R, list, PAL);
+    }).then(function (cards) {
+      return EgoExport.images(cards, base).then(function (imgs) {
+        showViewer(viewer, imgs);
+        return EgoExport.pdf(cards, base).catch(function (e) { return e; }).then(function (pdf) { showActions(actions, status, imgs, pdf); });
       });
     }).catch(function (e) {
       viewer.innerHTML = "";

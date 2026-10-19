@@ -186,6 +186,8 @@ button:disabled { opacity: 0.4; cursor: default; }
 .btn-start:active .arrow { transform: scale(0.96); }
 .btn-text { font-size: 0.9rem; color: var(--ink-faint); font-weight: 300; text-decoration: underline; text-underline-offset: 4px; }
 
+.admin-row { margin-top: 26px; text-align: right; }
+
 /* ---- 안내 띠 (카카오톡 인앱 브라우저 등) ---- */
 .notice-bar {
   border: 1px solid var(--strong-soft); border-radius: 6px;
