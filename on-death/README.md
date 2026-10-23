@@ -13,8 +13,8 @@ on-death/
   assets/               루트 assets 복사본 — 이 회차 전용
   round.json            질문 · 배색 · 참고 출처
   materials/qN.txt      질문 N 뒤 참고 자료 (Q1~Q5)
-  materials/qN.jpg      자료 상단 이미지 자리 (Q1~Q5) — 아직 없음
-  materials/book.jpg    Q6 뒤 출처 페이지의 책 표지 자리 — 아직 없음
+  materials/qN.jpg      자료 상단 이미지 자리 (Q1~Q5)
+  materials/book.jpg    Q6 뒤 출처 페이지의 책 표지 + 함께 읽으면 좋은 글 링크
 ```
 이미지는 파일이 없으면 자리째 숨겨지고, 같은 이름으로 넣으면 바로 나타난다.
 
