@@ -233,7 +233,10 @@
         m.links.label ? n("p", { class: "m-links-label", text: m.links.label }) : null
       ].concat(m.links.items.map(function (l) {
         var yt = youtubeId(l.url);
-        var thumb = yt ? n("img", { class: "thumb", src: "https://i.ytimg.com/vi/" + yt + "/mqdefault.jpg", alt: "", loading: "lazy" }) : null;
+        // 썸네일: round.json의 thumb(블로그 대표 이미지 등) 우선, 없으면 유튜브. 네이버 이미지는 외부 referer를 막아서
+        // referrerpolicy를 src보다 먼저 지정해야 한다
+        var tsrc = l.thumb || (yt ? "https://i.ytimg.com/vi/" + yt + "/mqdefault.jpg" : null);
+        var thumb = tsrc ? n("img", { class: "thumb", referrerpolicy: "no-referrer", src: tsrc, alt: "", loading: "lazy" }) : null;
         if (thumb) thumb.addEventListener("error", function () { thumb.remove(); });
         return n("a", { href: l.url, target: "_blank", rel: "noopener noreferrer" }, [
           thumb, n("span", { class: "label", text: l.text }), n("span", { class: "go", text: "↗" })

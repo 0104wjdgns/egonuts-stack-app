@@ -105,8 +105,8 @@ input.name-input { font-size: 1.3rem; font-weight: 400; padding-bottom: 14px; }
 .point-rule.tight { margin: 14px 0; } /* 이미지 아래 → 글 사이 간격 */
 
 /* ---- 참고 자료 페이지 ---- */
-.m-source { display: flex; gap: 16px; align-items: center; margin-top: 2px; }
-.m-source-cover { width: 96px; flex: none; display: block; border-radius: 3px; border: 1px solid var(--point-soft); }
+.m-source { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; margin-top: 2px; }
+.m-source-cover { width: 210px; max-width: 70%; flex: none; display: block; border-radius: 3px; border: 1px solid var(--point-soft); }
 .m-source-meta { min-width: 0; }
 .m-source-title { font-size: 1.16rem; font-weight: 600; line-height: 1.35; margin: 0; }
 .m-source-title span { display: block; margin-top: 4px; font-size: 0.9rem; font-weight: 400; font-style: italic; color: var(--ink-soft); }
@@ -114,7 +114,7 @@ input.name-input { font-size: 1.3rem; font-weight: 400; padding-bottom: 14px; }
 .m-source-note { margin: 20px 0 0; font-size: 1rem; font-weight: 400; line-height: 1.7; color: var(--ink); }
 .m-imgwrap { margin-top: 2px; }
 .m-img {
-  display: block; width: 100%; max-height: 76vh; object-fit: contain;
+  display: block; max-width: 100%; max-height: 58vh; width: auto; height: auto; margin: 0 auto;
   border-radius: 5px; border: 1px solid var(--point-soft); background: rgba(0, 0, 0, 0.16);
   opacity: 0; transform: translateY(8px) scale(1.006);
   transition: opacity 0.6s ease, transform 0.6s ease;
