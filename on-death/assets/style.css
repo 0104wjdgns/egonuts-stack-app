@@ -255,10 +255,7 @@ button:disabled { opacity: 0.4; cursor: default; }
   .m-img { opacity: 1; transform: none; }
 }
 
-/* ---- 로고 (상단 우측) ---- */
-body { position: relative; }
-.site-logo { position: absolute; top: 18px; right: 20px; width: 64px; height: auto; opacity: 0.9; pointer-events: none; z-index: 2; }
-@media (max-width: 480px) {
-  .site-logo { top: 14px; right: 14px; width: 52px; }
-  .app { padding-top: 82px; }
-}
+/* ---- 로고: 상단 라인 오른쪽 끝, 촛불빛 선으로 은은하게 ---- */
+.top-logo { flex: none; width: 34px; height: auto; opacity: 0.55; display: block; }
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 0 22px; }
+.top-row .kicker { margin: 0; }

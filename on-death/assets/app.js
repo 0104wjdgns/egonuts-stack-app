@@ -93,9 +93,11 @@
     var span = n("span"); span.style.width = pct + "%";
     return n("div", { class: "progress" }, [
       n("div", { class: "count", text: label }),
-      n("div", { class: "bar" }, [span])
+      n("div", { class: "bar" }, [span]),
+      logo()
     ]);
   }
+  function logo() { return n("img", { class: "top-logo", src: BASE + "assets/logo.png", alt: "EgoNuts" }); }
   function kakaoNotice() {
     if (!EgoExport.isKakao()) return null;
     return n("div", { class: "notice-bar fade-up" }, [
@@ -108,7 +110,9 @@
   function renderIntro() {
     var notice = kakaoNotice();
     if (notice) app.appendChild(notice);
-    app.appendChild(n("p", { class: "kicker fade-up", text: "EGONUTS" + (R.date ? " · " + R.date : "") }));
+    app.appendChild(n("div", { class: "top-row fade-up" }, [
+      n("p", { class: "kicker", text: "EGONUTS" + (R.date ? " · " + R.date : "") }), logo()
+    ]));
     app.appendChild(n("p", { class: "lead fade-up", text: R.title }));
     app.appendChild(n("hr", { class: "cover-rule fade-up" }));
 
