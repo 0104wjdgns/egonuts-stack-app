@@ -256,6 +256,9 @@ button:disabled { opacity: 0.4; cursor: default; }
 }
 
 /* ---- 로고: 상단 라인 오른쪽 끝, 촛불빛 선으로 은은하게 ---- */
-.top-logo { flex: none; width: 34px; height: auto; opacity: 0.55; display: block; }
-.top-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 0 22px; }
+.top-logo { flex: none; width: 44px; height: auto; opacity: 0.55; display: block; }
+/* 진행 라인은 끝까지 그대로 두고, 로고는 라인 끝에서 조금 안쪽에 얹는다 */
+.progress { position: relative; }
+.progress .top-logo { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); }
+.top-row { padding-right: 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 0 22px; }
 .top-row .kicker { margin: 0; }
