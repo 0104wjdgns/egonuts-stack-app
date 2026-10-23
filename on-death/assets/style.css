@@ -254,3 +254,11 @@ button:disabled { opacity: 0.4; cursor: default; }
   .fade-up, .app, .m-img, .progress .bar span { animation: none !important; transition: none !important; }
   .m-img { opacity: 1; transform: none; }
 }
+
+/* ---- 로고 (상단 우측) ---- */
+body { position: relative; }
+.site-logo { position: absolute; top: 18px; right: 20px; width: 64px; height: auto; opacity: 0.9; pointer-events: none; z-index: 2; }
+@media (max-width: 480px) {
+  .site-logo { top: 14px; right: 14px; width: 52px; }
+  .app { padding-top: 82px; }
+}
