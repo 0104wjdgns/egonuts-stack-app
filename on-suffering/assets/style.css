@@ -43,7 +43,8 @@
 
 html, body { margin: 0; padding: 0; }
 body {
-  background: var(--sky, var(--paper));
+  /* 첫 화면은 늘 어두운 표지라, 스크립트가 돌기 전 바탕도 어둡게 둔다 (크림이 번쩍이지 않게) */
+  background: var(--sky, #1f1810);
   transition: background-color 1.4s var(--ease-out), color 0.6s ease;
   color: var(--ink);
   font-family: "Noto Serif KR", ui-serif, Georgia, "Times New Roman", serif;
@@ -302,7 +303,7 @@ textarea, input[type="text"] { caret-color: var(--strong); }
 .w { display: inline-block; opacity: 0; transform: translateY(0.35em); filter: blur(3px); animation: word 0.55s var(--ease-out) forwards; }
 @keyframes word { to { opacity: 1; transform: none; filter: none; } }
 /* 한 번 본 화면 · 모션 줄이기: 바로 최종 상태 */
-.instant .sec.enter, .instant .w, .instant .fade-in, .instant .fade-up, .instant .rise, .instant .draw {
+.instant .sec-num.enter, .instant .w, .instant .fade-in, .instant .fade-up, .instant .rise, .instant .draw {
   animation: none !important; opacity: 1; transform: none; filter: none;
 }
 
@@ -336,9 +337,9 @@ textarea, input[type="text"] { caret-color: var(--strong); }
 
 /* ---- 2. 질문: 큰 번호가 가운데서 제자리로 (FLIP) ---- */
 .sec { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.1em 0.35em; margin: 0; color: var(--strong); font-weight: 400; }
-.sec-num { font-size: 2.6rem; font-weight: 300; line-height: 1; letter-spacing: -0.02em; }
+.sec-num { display: inline-block; font-size: 2.6rem; font-weight: 300; line-height: 1; letter-spacing: -0.02em; }
 .sec-label { font-size: 1.08rem; font-weight: 500; line-height: 1.45; }
-.sec.enter { transform-origin: left top; animation: secIn 1.15s var(--ease-paper) both; }
+.sec-num.enter { transform-origin: left top; animation: secIn 1.15s var(--ease-paper) both; }
 @keyframes secIn {
   0%   { opacity: 0; transform: translate(var(--sx, 8vw), var(--sy, 26vh)) scale(var(--ss, 1.7)); }
   30%  { opacity: 1; transform: translate(var(--sx, 8vw), var(--sy, 26vh)) scale(var(--ss, 1.7)); }
@@ -397,6 +398,10 @@ textarea { min-height: 120px; }
 /* 대기 안내: 작고 흐리게, 가운데 */
 .m-wait { margin: 32px auto 0; max-width: 30rem; font-size: 0.85rem; letter-spacing: 0.01em; color: var(--ink-faint); }
 
+/* 크림 바탕(진행 끝 · 완료) 위 금색 글자는 round.json strong보다 한 톤 짙게 (대비 5:1+).
+   카드 덱 색은 round.json 그대로다 — 이 값은 페이지 글자에만 쓴다 */
+body { --strong: #76571b; --strong-soft: rgba(118, 87, 27, 0.55); }
+
 /* ---- 4. 어두운 구간(진행 초반): 글자는 밝게, 금은 한 톤 밝게 ---- */
 body.dark {
   --ink: #f4eee4; --ink-soft: rgba(244, 238, 228, 0.80); --ink-faint: rgba(244, 238, 228, 0.58); --line: rgba(244, 238, 228, 0.20);
@@ -412,7 +417,7 @@ body.dark ::selection { background: rgba(212, 176, 106, 0.35); }
 /* 금빛 한가운데 구간: 바탕이 금색이라 포인트·흐린 글자를 짙게 */
 body.mid {
   --ink-soft: rgba(43, 38, 32, 0.84); --ink-faint: rgba(43, 38, 32, 0.66); --line: rgba(43, 38, 32, 0.22);
-  --strong: #5a4112; --strong-soft: rgba(90, 65, 18, 0.55); --point: #6e521f; --point-soft: rgba(110, 82, 31, 0.55);
+  --strong: #4b360f; --strong-soft: rgba(75, 54, 15, 0.55); --point: #6e521f; --point-soft: rgba(110, 82, 31, 0.55);
 }
 body.mid .top-logo { filter: brightness(0.6); }
 
@@ -426,5 +431,5 @@ body.is-done {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
-  .w, .fade-in, .rise, .draw, .sec.enter { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .w, .fade-in, .rise, .draw, .sec-num.enter { opacity: 1 !important; transform: none !important; filter: none !important; }
 }

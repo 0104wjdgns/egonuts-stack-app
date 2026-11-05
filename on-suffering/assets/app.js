@@ -35,7 +35,9 @@
   var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // --- 진행도 → 바탕색: 깊은 에스프레소 브라운 → 금빛 → 크림 종이 ---
-  var SKY = [[0, "#1f1810"], [0.20, "#2f2418"], [0.40, "#4a3824"], [0.55, "#7a5c38"], [0.70, "#b8924a"], [0.85, "#e8d9c0"], [1, "#f6f0e6"]];
+  // 중간 밝기 갈색(흰 글자도 검은 글자도 대비가 모자람)은 화면이 걸리지 않는 0.66~0.72 사이로 몰았다.
+  // 질문 4·자료 4(0.6~0.64)까지는 충분히 어둡고, 질문 5(0.76)부터는 밝은 금빛.
+  var SKY = [[0, "#1f1810"], [0.20, "#2f2418"], [0.42, "#3f2f1d"], [0.66, "#5e4629"], [0.72, "#b8924a"], [0.86, "#e8d9c0"], [1, "#f6f0e6"]];
   function hexRgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
   function skyAt(p) {
     for (var i = 1; i < SKY.length; i++) {
@@ -269,10 +271,11 @@
     var nudge = n("p", { class: "nudge", text: "먼저 당신의 생각을 한 줄이라도 적어 주세요." });
     nudge.style.display = "none";
 
-    // 큰 번호 + 소주제: 화면 가운데에서 크게 떴다가 제자리로 줄어 안착 (FLIP)
+    // 큰 번호 + 소주제: 번호가 화면 가운데에서 크게 떴다가 제자리로 줄어 안착 (FLIP), 소주제는 그 뒤에
+    var num = n("span", { class: "sec-num", text: numText(qi) + "_" });
     var sec = n("h2", { class: "sec" }, [
-      n("span", { class: "sec-num", text: numText(qi) + "_" }),
-      q.short ? n("span", { class: "sec-label", text: q.short }) : null
+      num,
+      q.short ? delay(n("span", { class: "sec-label fade-in", text: q.short }), 0.85) : null
     ]);
     var rule = delay(n("hr", { class: "sec-rule draw" }), 0.95);
 
@@ -287,7 +290,6 @@
         if (i < words.length - 1) qText.appendChild(document.createTextNode(" "));
       });
       afterWords = w0 + words.length * step + 0.25;
-      qText.setAttribute("aria-label", text);
     } else {
       qText.textContent = "질문 " + (qi + 1);
     }
@@ -326,14 +328,15 @@
     app.appendChild(delay(n("div", { class: "nav fade-in" }, [back, next]), afterWords));
 
     if (!instant) {
-      var r = sec.getBoundingClientRect();
-      var ss = Math.min(1.9, (window.innerWidth * 0.82) / Math.max(r.width, 1));
+      // 번호 글자 자체의 크기로 잰다 (줄 전체 폭으로 재면 휴대폰에서 커지지 않는다)
+      var r = num.getBoundingClientRect();
+      var ss = Math.min(2.4, (window.innerWidth * 0.7) / Math.max(r.width, 1));
       var sx = (window.innerWidth - r.width * ss) / 2 - r.left;
       var sy = window.innerHeight * 0.38 - r.top - (r.height * ss) / 2;
-      sec.style.setProperty("--ss", ss.toFixed(3));
-      sec.style.setProperty("--sx", sx.toFixed(1) + "px");
-      sec.style.setProperty("--sy", sy.toFixed(1) + "px");
-      sec.classList.add("enter");
+      num.style.setProperty("--ss", ss.toFixed(3));
+      num.style.setProperty("--sx", sx.toFixed(1) + "px");
+      num.style.setProperty("--sy", sy.toFixed(1) + "px");
+      num.classList.add("enter");
     }
   }
 
@@ -638,6 +641,7 @@
   }
 
   function renderMissing() {
+    setProgress(1);
     app.appendChild(n("div", { class: "center" }, [
       n("p", { class: "lead", text: "회차를 찾을 수 없어요" }),
       n("p", { class: "sub", text: "주소를 다시 확인해 주세요." })

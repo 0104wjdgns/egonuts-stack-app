@@ -59,7 +59,9 @@ flowchart LR
    - `questions[]`: `text`, `short`, `hint?`, `fields?`, `material` `{ img, txt }` 또는 `{ source }`, `finale?`
    - `closing.text`, `closing.books?`
 4. **`materials/`** — 질문별 텍스트·이미지. txt 규칙: 첫 줄 제목, `"` 인용, `—` 출처, `**굵게**`, `§` 파트.
-5. **SKY 스톱** — `app.js`의 `SKY`를 주제 딥색 → point → `#f6f0e6` 6~7스톱으로. 표지 `--cover-bg`, 어두운 구간 금빛(`body.dark`의 `--strong/--point`), `body.mid` 색, 완료 `is-done` 그라데이션(`style.css`)도 같은 계열로.
+5. **SKY 스톱** — `app.js`의 `SKY`를 주제 딥색 → point → `#f6f0e6` 6~7스톱으로. 표지 `--cover-bg`, 어두운 구간 금빛(`body.dark`의 `--strong/--point`), `body.mid` 색, 크림 바탕 글자색(`body`의 `--strong`), 완료 `is-done` 그라데이션(`style.css`)도 같은 계열로.
+   - **대비 확인 필수:** 각 화면의 진행도(질문 `0.1 + 0.9·(i/(N-1))·0.92`, 자료 +0.04)에서 바탕색을 계산해 본문·흐린 글·포인트 글자가 4.5:1 이상인지 본다. 중간 밝기 색(흰 글자도 검은 글자도 대비가 모자란 구간)은 화면이 걸리지 않는 진행도 사이에 몰아 둔다. 질문 수가 바뀌면 다시 계산한다.
+   - 질문 번호 FLIP은 `.sec-num` 글자 크기로 잰다. 줄 전체(`.sec`)로 재면 휴대폰에서 커지지 않는다.
 6. **OG** — 표지 톤에 맞춘 `og.png` 생성.
 7. **README** 표에 행 추가. (나중에 허브 페이지가 생기면 링크.)
 8. **로컬** — `python -m http.server 5178` → `http://localhost:5178/on-<slug>/` 를 390px·데스크톱으로.
