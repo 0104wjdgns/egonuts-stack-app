@@ -33,6 +33,7 @@
   var textCache = {};
   var seen = {}; // 한 번 본 화면은 다시 와도 애니메이션 없이
   var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var TOUCH = window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
   // --- 진행도 → 바탕색: 깊은 에스프레소 브라운 → 금빛 → 크림 종이 ---
   // 중간 밝기 갈색(흰 글자도 검은 글자도 대비가 모자람)은 화면이 걸리지 않는 0.66~0.72 사이로 몰았다.
@@ -107,6 +108,8 @@
   function url(p) { return /^(https?:)?\//.test(p) ? p : BASE + p; }
 
   function paint(render) {
+    if (coverCleanup) { coverCleanup(); coverCleanup = null; }
+    document.body.classList.remove("typing");
     app.innerHTML = ""; app.className = "app";
     var t = STEPS[idx] && STEPS[idx].t;
     document.body.classList.toggle("is-cover", t === "cover");
@@ -114,12 +117,50 @@
     window.scrollTo(0, 0);
     render();
   }
+  var navToken = 0;
   function transition(render) {
+    var my = ++navToken; // 연달아 눌러도 마지막 이동만 그린다
     if (REDUCED) { paint(render); return; }
     app.classList.add("fade-out");
-    setTimeout(function () { paint(render); }, 170);
+    setTimeout(function () { if (my === navToken) paint(render); }, 170);
   }
-  function go(i) { idx = Math.max(0, Math.min(LAST, i)); transition(renderCurrent); }
+
+  // --- 브라우저 방문 기록: 휴대폰 뒤로가기(안드로이드 버튼 · 아이폰 스와이프) = 이전 단계 ---
+  // 기록마다 { egoStep: 지금 단계, prev: 직전 단계 }. 화면의 '← 뒤로'도 직전 단계면 기록을 되감아
+  // 두 뒤로가기가 서로 엇갈리지 않게 한다.
+  var coverCleanup = null;
+  function remember(step, replace) {
+    try {
+      var st = history.state, cur = st && st.egoStep;
+      if (replace) history.replaceState({ egoStep: step, prev: null }, "");
+      else if (cur === step) return;
+      else history.pushState({ egoStep: step, prev: cur == null ? null : cur }, "");
+    } catch (e) {}
+  }
+  function go(i) {
+    idx = Math.max(0, Math.min(LAST, i));
+    remember(idx);
+    transition(renderCurrent);
+  }
+  function backTo(i) {
+    var st = history.state;
+    if (st && st.prev === i && st.egoStep === idx) { history.back(); return; }
+    go(i);
+  }
+  window.addEventListener("popstate", function (e) {
+    if (!STEPS) return;
+    var s = e.state && e.state.egoStep;
+    if (s === "full") { transition(renderFullExport); return; }
+    idx = typeof s === "number" ? Math.max(0, Math.min(LAST, s)) : 0;
+    transition(renderCurrent);
+  });
+
+  // 입력 중(휴대폰 키보드가 올라온 동안)에는 하단 고정 버튼을 제자리로 내려 둔다
+  function isField(el) { return !!el && /^(TEXTAREA|INPUT)$/.test(el.tagName); }
+  document.addEventListener("focusin", function (e) { if (isField(e.target)) document.body.classList.add("typing"); });
+  document.addEventListener("focusout", function () {
+    setTimeout(function () { if (!isField(document.activeElement)) document.body.classList.remove("typing"); }, 0);
+  });
   function renderCurrent() {
     var s = STEPS[idx];
     if (s.t === "cover") return renderCover();
@@ -174,7 +215,7 @@
         R.source ? delay(n("p", { class: "cover-src rise", text: "참고 · " + R.source }), footDelay - 0.15) : null
       ]),
       delay(n("div", { class: "cover-foot rise" }, [
-        n("span", { text: "스크롤하거나 눌러서 시작" }),
+        n("span", { text: TOUCH ? "밀어 올리거나 눌러서 시작" : "스크롤하거나 눌러서 시작" }),
         n("span", { class: "cover-chev", "aria-hidden": "true" })
       ]), footDelay)
     ]);
@@ -185,9 +226,10 @@
     var started = false, touchY = null;
     function start() {
       if (started) return; started = true; cleanup();
-      if (REDUCED) { idx = 1; paint(renderCurrent); return; }
+      function enter() { if (STEPS[idx].t !== "cover") return; idx = 1; remember(1); paint(renderCurrent); }
+      if (REDUCED) { enter(); return; }
       cover.classList.add("exit");
-      setTimeout(function () { idx = 1; paint(renderCurrent); }, 650);
+      setTimeout(enter, 650);
     }
     function onWheel(e) { if (e.deltaY > 8) start(); }
     function onKey(e) { if (["Enter", " ", "ArrowDown", "PageDown"].indexOf(e.key) >= 0) { e.preventDefault(); start(); } }
@@ -197,6 +239,7 @@
       window.removeEventListener("wheel", onWheel); window.removeEventListener("keydown", onKey);
       window.removeEventListener("touchstart", onTs); window.removeEventListener("touchmove", onTm);
     }
+    coverCleanup = cleanup;
     cover.addEventListener("click", start);
     window.addEventListener("wheel", onWheel, { passive: true });
     window.addEventListener("keydown", onKey);
@@ -244,7 +287,7 @@
       ? n("button", { class: "btn-text", text: "처음부터 새로 쓰기", onclick: function () {
           if (confirm("이 기기에 저장된 답을 지우고 새로 쓸까요?")) { clearDraft(); seen = {}; go(1); }
         } })
-      : n("button", { class: "btn-back", text: "← 표지", onclick: function () { go(0); } });
+      : n("button", { class: "btn-back", text: "← 표지", onclick: function () { backTo(0); } });
     var start = n("button", { class: "btn-start", onclick: function () { go(FIRST_Q); } }, [
       n("span", { text: draft ? "이어서 쓰기" : "시작" }),
       n("span", { class: "arrow", text: "→" })
@@ -252,7 +295,7 @@
     app.appendChild(delay(n("div", { class: "nav fade-in" }, [left, start]), after));
     if (isAdmin()) {
       app.appendChild(delay(n("div", { class: "admin-row fade-in" }, [
-        n("button", { class: "btn-text", text: "관리자 · 발제문 전체 카드 추출", onclick: function () { transition(renderFullExport); } })
+        n("button", { class: "btn-text", text: "관리자 · 발제문 전체 카드 추출", onclick: function () { remember("full"); transition(renderFullExport); } })
       ]), after));
     }
   }
@@ -275,16 +318,16 @@
     var num = n("span", { class: "sec-num", text: numText(qi) + "_" });
     var sec = n("h2", { class: "sec" }, [
       num,
-      q.short ? delay(n("span", { class: "sec-label fade-in", text: q.short }), 0.85) : null
+      q.short ? delay(n("span", { class: "sec-label fade-in", text: q.short }), 0.7) : null
     ]);
-    var rule = delay(n("hr", { class: "sec-rule draw" }), 0.95);
+    var rule = delay(n("hr", { class: "sec-rule draw" }), 0.8);
 
     // 질문 문장은 단어 단위로 드러난다
     var qText = n("p", { class: "question" + (text ? "" : " empty") });
-    var w0 = 1.2, afterWords = w0;
+    var w0 = 0.9, afterWords = w0;
     if (text) {
       var words = text.split(/\s+/);
-      var step = Math.min(0.06, 1.6 / words.length);
+      var step = Math.min(0.05, 1.4 / words.length);
       words.forEach(function (w, i) {
         qText.appendChild(delay(n("span", { class: "w", text: w }), w0 + i * step));
         if (i < words.length - 1) qText.appendChild(document.createTextNode(" "));
@@ -294,12 +337,20 @@
       qText.textContent = "질문 " + (qi + 1);
     }
 
-    // 입력 자리는 움직이지 않는다 — 단어가 다 드러난 뒤 조용히 나타날 뿐
-    var block = delay(n("div", { class: "qblock fade-in" }), afterWords);
+    // 입력 자리는 움직이지 않는다 — 조용히 나타날 뿐. 바로 쓰고 싶은 사람을 기다리게 하지 않도록 1초 안에
+    var inputAt = Math.min(afterWords, 1.0);
+    var block = delay(n("div", { class: "qblock fade-in" }), inputAt);
     if (q.hint) block.appendChild(n("p", { class: "hint", text: q.hint }));
     else if (!text) block.appendChild(n("p", { class: "hint", text: "(질문 준비 중)" }));
 
     var fields = q.fields || [{}];
+    // 저장 표시: 쓰는 즉시 기기에 저장되고, 표시는 손을 멈추면 갱신
+    function chars() {
+      return fields.reduce(function (sum, f, fi) { return sum + (state.answers[fieldName(q, qi, fi)] || "").trim().length; }, 0);
+    }
+    var saveNote = n("span", { text: chars() ? "이 기기에 저장돼 있어요" : "쓰는 대로 이 기기에 자동 저장돼요" });
+    var saveCount = n("span", { text: chars() ? chars() + "자" : "" });
+    var saveTimer;
     fields.forEach(function (f, fi) {
       var key = fieldName(q, qi, fi);
       if (f.label) block.appendChild(n("label", { class: "field-label", text: f.label }));
@@ -307,16 +358,29 @@
       ta.value = state.answers[key] || "";
       ta.addEventListener("input", function () {
         state.answers[key] = ta.value; save(); autoGrow(ta); nudge.style.display = "none";
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(function () {
+          var d = new Date(), c = chars();
+          saveNote.textContent = "자동 저장됨 · " + d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
+          saveCount.textContent = c ? c + "자" : "";
+        }, 400);
       });
       block.appendChild(ta);
       setTimeout(function () { autoGrow(ta); }, 0);
     });
+    block.appendChild(n("p", { class: "save-state" }, [saveNote, saveCount]));
     block.appendChild(nudge);
 
-    var back = n("button", { class: "btn-back", text: "← 뒤로", onclick: function () { go(idx - 1); } });
+    var back = n("button", { class: "btn-back", text: "← 뒤로", onclick: function () { backTo(idx - 1); } });
     var next = n("button", { class: "btn-next", text: "다음 →", onclick: function () {
       var filled = fields.some(function (f, fi) { return (state.answers[fieldName(q, qi, fi)] || "").trim().length > 0; });
-      if (!filled) { nudge.style.display = "block"; return; }
+      if (!filled) {
+        // 하단 고정 버튼에서 누르면 안내가 화면 밖일 수 있어, 입력칸으로 데려간다
+        nudge.style.display = "block";
+        var first = block.querySelector("textarea");
+        if (first) first.scrollIntoView({ block: "center", behavior: REDUCED ? "auto" : "smooth" });
+        return;
+      }
       go(idx + 1);
     } });
 
@@ -325,7 +389,7 @@
     app.appendChild(rule);
     app.appendChild(n("div", { class: "q-wrap" }, [qText]));
     app.appendChild(block);
-    app.appendChild(delay(n("div", { class: "nav fade-in" }, [back, next]), afterWords));
+    app.appendChild(delay(n("div", { class: "nav dock fade-in" }, [back, next]), inputAt));
 
     if (!instant) {
       // 번호 글자 자체의 크기로 잰다 (줄 전체 폭으로 재면 휴대폰에서 커지지 않는다)
@@ -408,9 +472,9 @@
     // 종이 아래 작고 흐린 대기 안내
     if (R.materialNote) app.appendChild(delay(n("p", { class: "m-wait fade-in", text: R.materialNote }), instant ? 0 : 1.2));
 
-    var back = n("button", { class: "btn-back", text: "← 내 답 보기", onclick: function () { go(idx - 1); } });
+    var back = n("button", { class: "btn-back", text: "← 내 답 보기", onclick: function () { backTo(idx - 1); } });
     var next = n("button", { class: "btn-next", text: "다음 →", onclick: function () { go(idx + 1); } });
-    app.appendChild(delay(n("div", { class: "nav fade-in" }, [back, next]), instant ? 0 : 1.0));
+    app.appendChild(delay(n("div", { class: "nav dock fade-in" }, [back, next]), instant ? 0 : 1.0));
 
     if (!m.txt) { textWrap.innerHTML = ""; return; }
     loadText(url(m.txt), function (parsed, err) {
@@ -473,7 +537,7 @@
 
   // --- 카드에 넣을 이름 ---
   function renderName() {
-    var input = n("input", { type: "text", class: "name-input", maxlength: "20", placeholder: "이름 또는 닉네임", autocomplete: "nickname" });
+    var input = n("input", { type: "text", class: "name-input", maxlength: "20", placeholder: "이름 또는 닉네임", autocomplete: "nickname", enterkeyhint: "done" });
     input.value = state.name || "";
     input.addEventListener("input", function () { state.name = input.value; save(); });
     input.addEventListener("keydown", function (e) { if (e.key === "Enter") make(); });
@@ -486,8 +550,8 @@
       n("p", { class: "hint", text: "비워 두면 이름 없이 만들어요." }),
       input
     ]));
-    app.appendChild(n("div", { class: "nav" }, [
-      n("button", { class: "btn-back", text: "← 뒤로", onclick: function () { go(idx - 1); } }),
+    app.appendChild(n("div", { class: "nav dock" }, [
+      n("button", { class: "btn-back", text: "← 뒤로", onclick: function () { backTo(idx - 1); } }),
       n("button", { class: "btn-next", text: "카드 만들기 →", onclick: make })
     ]));
   }
@@ -565,7 +629,7 @@
     app.appendChild(actions);
     app.appendChild(status);
     app.appendChild(n("div", { class: "nav" }, [
-      n("button", { class: "btn-back", text: "← 목차로", onclick: function () { go(1); } }),
+      n("button", { class: "btn-back", text: "← 목차로", onclick: function () { backTo(1); } }),
       n("span", { class: "spacer" })
     ]));
 
@@ -668,7 +732,12 @@
       LAST = STEPS.length - 1;
 
       load();
-      renderCurrent();
+      // 새로고침(카톡에서 앱을 오가다 다시 열릴 때 등)이면 보던 단계에서 이어서
+      var st = history.state;
+      if (st && typeof st.egoStep === "number" && st.egoStep <= LAST) idx = st.egoStep;
+      else remember(0, true);
+      try { history.scrollRestoration = "manual"; } catch (e) {}
+      paint(renderCurrent);
     })
     .catch(function () { renderMissing(); });
 })();

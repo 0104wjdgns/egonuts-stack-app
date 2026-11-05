@@ -42,7 +42,8 @@ flowchart LR
 4. **움직임은 장면 전환만** — 입력칸·버튼은 고요. `prefers-reduced-motion` 존중.
 5. **진행 그라데이션** — `setProgress(p)`가 `--sky`를 보간. 스톱은 주제 딥색 → 크림. 휘도 < 0.55면 `body.dark`(글자 밝게), 그 위 포인트색 한가운데 구간은 `body.mid`(포인트·흐린 글자를 짙게). textarea/paper는 늘 크림 표면 위 진한 잉크.
 6. **완료** — 카드 덱이 주인공. 마무리 인사는 맨 아래. `body.is-done`은 크림→테마 포인트 그라데이션.
-7. **OG 필수** — 주제 폴더에 1200×630 `og.png` + `og:title/description/url/image/width/height` + `twitter:card`. 배포 후 실주소 확인. 카톡 캐시면 `?v=2`.
+7. **휴대폰 우선** — 단계마다 방문 기록(`history.pushState`)을 남겨 휴대폰 뒤로가기 = 이전 단계, 새로고침하면 보던 단계에서 이어짐. 질문·자료·이름 화면의 뒤로/다음은 하단 고정(`.nav.dock`, 입력 중엔 제자리로). 터치 영역 44px 이상, '다음'은 금색 둥근 버튼. 입력칸 아래 자동 저장 표시. 입력칸은 1초 안에 나타난다.
+8. **OG 필수** — 주제 폴더에 1200×630 `og.png` + `og:title/description/url/image/width/height` + `twitter:card`. 배포 후 실주소 확인. 카톡 캐시면 `?v=2`.
 
 시그니처 모션: ① 표지 rise/draw ② 질문 번호 FLIP + 단어 단위 ③ 자료 종이 unfold ④ 진행 하늘 ⑤ (리더스클럽) 완료 점 — 에고너츠는 ⑤ 대신 카드 덱.
 

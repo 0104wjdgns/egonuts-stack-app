@@ -421,6 +421,46 @@ body.mid {
 }
 body.mid .top-logo { filter: brightness(0.6); }
 
+/* ============================================================
+   휴대폰 친화: 큰 터치 영역 · 눈에 띄는 '다음' · 하단 고정 이동 버튼 · 저장 표시
+   ============================================================ */
+:root { --on-strong: #f6f0e6; }
+html { scroll-padding-bottom: 96px; } /* 입력칸으로 스크롤될 때 하단 고정 버튼 밑에 숨지 않게 */
+body.dark { --on-strong: #2b2620; }
+
+.btn-back { display: inline-flex; align-items: center; min-height: 48px; padding: 0 14px 0 4px; }
+.btn-next {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 26px; border-radius: 999px;
+  background: var(--strong); color: var(--on-strong); font-weight: 500;
+  transition: background-color 0.6s ease, color 0.6s ease, transform 0.15s ease;
+}
+.btn-next:hover, .btn-next:focus-visible { color: var(--on-strong); opacity: 0.92; }
+.btn-next:active { transform: scale(0.98); }
+.btn-text { display: inline-flex; align-items: center; min-height: 44px; }
+.viewer-bar button { min-width: 48px; min-height: 48px; }
+
+/* 하단 고정: 길게 스크롤해도 '다음'이 늘 손 닿는 곳에. 끝까지 내리면 제자리에 붙는다 */
+.nav.dock {
+  position: sticky; bottom: 0; z-index: 5;
+  margin: 40px calc(-1 * clamp(22px, 6vw, 40px)) 0;
+  padding: 12px clamp(22px, 6vw, 40px) calc(12px + env(safe-area-inset-bottom));
+  background-color: var(--sky, #1f1810);
+  transition: background-color 1.4s var(--ease-out);
+}
+.nav.dock::before { /* 위쪽 경계를 부드럽게 */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 24px; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--sky, #1f1810));
+}
+/* 휴대폰에서 입력 중엔 키보드 위에 떠 있지 않게 제자리로 */
+@media (hover: none) and (pointer: coarse) {
+  body.typing .nav.dock { position: static; }
+  body.typing .nav.dock::before { display: none; }
+}
+
+/* 저장 표시 */
+.save-state { display: flex; justify-content: space-between; gap: 12px; margin: 10px 2px 0; min-height: 1.3em; font-size: 0.8rem; color: var(--ink-soft); }
+
 /* ---- 5. 완료: 크림에서 아래로 갈수록 따뜻한 금빛, 마무리 인사는 맨 아래 ---- */
 body.is-done {
   background: linear-gradient(180deg, #f6f0e6 0%, #f3e8d6 30%, #e8d4b0 60%, #d4b478 84%, #b8924a 100%) fixed;
