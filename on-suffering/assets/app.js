@@ -1,9 +1,11 @@
 /* ============================================================
    에고너츠 스택 — 발제문 흐름 (「고통과 의미」 전용 복사본)
-   표지 겸 목차 → (질문 → 참고 자료)… → 카드에 넣을 이름 → 카드 덱
+   표지 → 목차 → (질문 → 참고 자료)… → 카드에 넣을 이름 → 카드 덱
    - 회차 설정: /on-suffering/round.json  (죽음에 관하여 앱을 복사해 이 폴더 안에서만 돈다)
    - 질문에 답을 써야 다음(참고 자료)으로 진행 (답 쓴 뒤에만 자료 공개)
    - 작성 중인 답은 이 기기에만 저장. 서버로 보내지 않는다.
+   - 모션·진행 배경은 리더스클럽 「용서」 발제문의 방식을 옮겨 왔다.
+     표지 rise/draw · 질문 번호 FLIP + 단어 등장 · 자료 종이 펼침 · 진행할수록 브라운 → 크림
    ============================================================ */
 (function () {
   "use strict";
@@ -25,9 +27,39 @@
   }
 
   var app = document.getElementById("app");
-  var R, PAL, QUESTIONS, STEPS, LAST, NQ;
+  var root = document.documentElement;
+  var R, PAL, QUESTIONS, STEPS, LAST, NQ, FIRST_Q;
   var idx = 0;
   var textCache = {};
+  var seen = {}; // 한 번 본 화면은 다시 와도 애니메이션 없이
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // --- 진행도 → 바탕색: 깊은 에스프레소 브라운 → 금빛 → 크림 종이 ---
+  var SKY = [[0, "#1f1810"], [0.20, "#2f2418"], [0.40, "#4a3824"], [0.55, "#7a5c38"], [0.70, "#b8924a"], [0.85, "#e8d9c0"], [1, "#f6f0e6"]];
+  function hexRgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  function skyAt(p) {
+    for (var i = 1; i < SKY.length; i++) {
+      if (p <= SKY[i][0]) {
+        var a = SKY[i - 1], b = SKY[i], t = (p - a[0]) / (b[0] - a[0]), ca = hexRgb(a[1]), cb = hexRgb(b[1]);
+        return ca.map(function (v, k) { return Math.round(v + (cb[k] - v) * t); });
+      }
+    }
+    return hexRgb(SKY[SKY.length - 1][1]);
+  }
+  function setProgress(p) {
+    p = Math.max(0, Math.min(1, p));
+    root.style.setProperty("--p", String(p));
+    var c = skyAt(p), lum = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+    root.style.setProperty("--sky", "rgb(" + c.join(",") + ")");
+    document.body.classList.toggle("dark", lum < 0.55);
+    // 금빛 한가운데(밝지만 크림은 아닌 구간): 금 글자가 묻히지 않게 한 톤 짙게
+    document.body.classList.toggle("mid", lum >= 0.55 && lum < 0.84);
+    var mt = document.querySelector('meta[name="theme-color"]');
+    if (mt) mt.setAttribute("content", "rgb(" + c.join(",") + ")");
+  }
+  function qProgress(qi) { return 0.1 + 0.9 * (NQ > 1 ? qi / (NQ - 1) : 0) * 0.92; }
+  function delay(el, s) { el.style.animationDelay = s + "s"; return el; }
+  function numText(i) { return (i < 9 ? "0" : "") + (i + 1); }
   var state = { name: "", answers: {} };
   var fieldName = function (q, qi, fi) { return EgoCards.fieldName(q, qi, fi); };
 
@@ -72,16 +104,23 @@
   function lines(s) { return escapeHtml(s).replace(/\n/g, "<br/>"); }
   function url(p) { return /^(https?:)?\//.test(p) ? p : BASE + p; }
 
+  function paint(render) {
+    app.innerHTML = ""; app.className = "app";
+    var t = STEPS[idx] && STEPS[idx].t;
+    document.body.classList.toggle("is-cover", t === "cover");
+    document.body.classList.toggle("is-done", t === "done" && render === renderCurrent);
+    window.scrollTo(0, 0);
+    render();
+  }
   function transition(render) {
+    if (REDUCED) { paint(render); return; }
     app.classList.add("fade-out");
-    setTimeout(function () {
-      app.innerHTML = ""; app.className = "app";
-      render(); window.scrollTo(0, 0);
-    }, 170);
+    setTimeout(function () { paint(render); }, 170);
   }
   function go(i) { idx = Math.max(0, Math.min(LAST, i)); transition(renderCurrent); }
   function renderCurrent() {
     var s = STEPS[idx];
+    if (s.t === "cover") return renderCover();
     if (s.t === "intro") return renderIntro();
     if (s.t === "q") return renderQuestion(s.i);
     if (s.t === "m") return renderMaterial(s.i);
@@ -106,18 +145,79 @@
     ]);
   }
 
-  // --- 표지 겸 목차 ---
+  // --- 표지: 잡지 표지처럼 마스트 → 제목 → 밑줄 → 핵심 질문이 한 줄씩 ---
+  function renderCover() {
+    setProgress(0);
+    app.className = "app full";
+    var intro = R.intro || {};
+    var coreLines = intro.coreQuestionLines || (intro.coreQ ? String(intro.coreQ).split("\n") : []);
+    // 제목의 마지막 낱말을 금빛으로 (예: 고통과 <em>의미</em>)
+    var titleHtml = escapeHtml(R.title).replace(/(\S+)$/, "<em>$1</em>");
+
+    var core = n("p", { class: "cover-core" });
+    var t0 = 1.45, gap = 0.55;
+    coreLines.forEach(function (l, i) { core.appendChild(delay(n("span", { class: "line rise", text: l }), t0 + i * gap)); });
+    var footDelay = t0 + coreLines.length * gap + 0.3;
+
+    var cover = n("section", { class: "cover", role: "button", tabindex: "0", "aria-label": "발제문 시작하기" }, [
+      n("div", { class: "cover-inner" }, [
+        delay(n("div", { class: "cover-mast rise" }, [
+          n("p", { class: "eyebrow", text: "EGONUTS" + (R.date ? " · " + R.date : "") }),
+          n("span", { class: "cover-word", text: "EgoNuts" })
+        ]), 0.1),
+        delay(n("h1", { class: "cover-title rise", html: titleHtml }), 0.35),
+        delay(n("hr", { class: "cover-rule draw" }), 0.95),
+        coreLines.length ? delay(n("p", { class: "eyebrow cover-core-label rise", text: intro.coreLabel || "핵심 질문" }), 1.15) : null,
+        coreLines.length ? core : null,
+        R.source ? delay(n("p", { class: "cover-src rise", text: "참고 · " + R.source }), footDelay - 0.15) : null
+      ]),
+      delay(n("div", { class: "cover-foot rise" }, [
+        n("span", { text: "스크롤하거나 눌러서 시작" }),
+        n("span", { class: "cover-chev", "aria-hidden": "true" })
+      ]), footDelay)
+    ]);
+    app.appendChild(cover);
+    if (REDUCED || seen.cover) app.classList.add("instant");
+    seen.cover = true;
+
+    var started = false, touchY = null;
+    function start() {
+      if (started) return; started = true; cleanup();
+      if (REDUCED) { idx = 1; paint(renderCurrent); return; }
+      cover.classList.add("exit");
+      setTimeout(function () { idx = 1; paint(renderCurrent); }, 650);
+    }
+    function onWheel(e) { if (e.deltaY > 8) start(); }
+    function onKey(e) { if (["Enter", " ", "ArrowDown", "PageDown"].indexOf(e.key) >= 0) { e.preventDefault(); start(); } }
+    function onTs(e) { touchY = e.touches[0].clientY; }
+    function onTm(e) { if (touchY != null && touchY - e.touches[0].clientY > 30) start(); }
+    function cleanup() {
+      window.removeEventListener("wheel", onWheel); window.removeEventListener("keydown", onKey);
+      window.removeEventListener("touchstart", onTs); window.removeEventListener("touchmove", onTm);
+    }
+    cover.addEventListener("click", start);
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("touchstart", onTs, { passive: true });
+    window.addEventListener("touchmove", onTm, { passive: true });
+  }
+
+  // --- 목차 (표지 다음) ---
   function renderIntro() {
+    setProgress(0.04);
+    var instant = REDUCED || seen.intro;
+    seen.intro = true;
+    if (instant) app.classList.add("instant");
     var notice = kakaoNotice();
     if (notice) app.appendChild(notice);
-    app.appendChild(n("div", { class: "top-row fade-up" }, [
+    app.appendChild(delay(n("div", { class: "top-row rise" }, [
       n("p", { class: "kicker", text: "EGONUTS" + (R.date ? " · " + R.date : "") }), logo()
-    ]));
-    app.appendChild(n("p", { class: "lead fade-up", text: R.title }));
-    app.appendChild(n("hr", { class: "cover-rule fade-up" }));
+    ]), 0));
+    app.appendChild(delay(n("p", { class: "lead rise", text: R.title }), 0.08));
+    app.appendChild(delay(n("hr", { class: "toc-rule draw" }), 0.2));
 
     var intro = R.intro || {};
-    if (intro.coreQ) {
+    if (intro.coreQ && !intro.coreQuestionLines) {
       app.appendChild(n("div", { class: "intro-core fade-up" }, [
         n("p", { class: "core-label", text: intro.coreLabel || "핵심 질문" }),
         n("p", { class: "core-q", html: lines(intro.coreQ) })
@@ -125,32 +225,33 @@
     }
     if (intro.sub) app.appendChild(n("p", { class: "sub fade-up", html: lines(intro.sub) }));
 
-    var toc = n("ol", { class: "toc fade-up" });
+    var toc = n("ol", { class: "toc" });
     QUESTIONS.forEach(function (q, i) {
       var label = (q.short || q.text || "").trim();
-      toc.appendChild(n("li", null, [
-        n("span", { class: "num", text: (i < 9 ? "0" : "") + (i + 1) }),
+      toc.appendChild(delay(n("li", { class: "rise" }, [
+        n("span", { class: "num", text: numText(i) }),
         n("span", { class: "t" + (label ? "" : " empty"), text: label || "질문 " + (i + 1) })
-      ]));
+      ]), 0.3 + i * 0.07));
     });
     app.appendChild(toc);
-    if (R.source) app.appendChild(n("p", { class: "cover-source fade-up", text: "참고 · " + R.source }));
+    var after = 0.3 + QUESTIONS.length * 0.07 + 0.1;
+    if (R.source) app.appendChild(delay(n("p", { class: "cover-source fade-in", text: "참고 · " + R.source }), after));
 
     var draft = hasDraft();
     var left = draft
       ? n("button", { class: "btn-text", text: "처음부터 새로 쓰기", onclick: function () {
-          if (confirm("이 기기에 저장된 답을 지우고 새로 쓸까요?")) { clearDraft(); go(0); }
+          if (confirm("이 기기에 저장된 답을 지우고 새로 쓸까요?")) { clearDraft(); seen = {}; go(1); }
         } })
-      : n("span", { class: "spacer" });
-    var start = n("button", { class: "btn-start", onclick: function () { go(1); } }, [
+      : n("button", { class: "btn-back", text: "← 표지", onclick: function () { go(0); } });
+    var start = n("button", { class: "btn-start", onclick: function () { go(FIRST_Q); } }, [
       n("span", { text: draft ? "이어서 쓰기" : "시작" }),
       n("span", { class: "arrow", text: "→" })
     ]);
-    app.appendChild(n("div", { class: "nav fade-up" }, [left, start]));
+    app.appendChild(delay(n("div", { class: "nav fade-in" }, [left, start]), after));
     if (isAdmin()) {
-      app.appendChild(n("div", { class: "admin-row fade-up" }, [
+      app.appendChild(delay(n("div", { class: "admin-row fade-in" }, [
         n("button", { class: "btn-text", text: "관리자 · 발제문 전체 카드 추출", onclick: function () { transition(renderFullExport); } })
-      ]));
+      ]), after));
     }
   }
 
@@ -159,13 +260,40 @@
     var q = QUESTIONS[qi];
     var pct = Math.round((idx / LAST) * 100);
     var text = (q.text || "").trim();
+    var key = "q" + qi;
+    var instant = REDUCED || seen[key];
+    seen[key] = true;
+    if (instant) app.classList.add("instant");
+    setProgress(qProgress(qi));
 
     var nudge = n("p", { class: "nudge", text: "먼저 당신의 생각을 한 줄이라도 적어 주세요." });
     nudge.style.display = "none";
 
-    var block = n("div", { class: "qblock fade-up" }, [
-      n("p", { class: "question" + (text ? "" : " empty"), text: text || "질문 " + (qi + 1) })
+    // 큰 번호 + 소주제: 화면 가운데에서 크게 떴다가 제자리로 줄어 안착 (FLIP)
+    var sec = n("h2", { class: "sec" }, [
+      n("span", { class: "sec-num", text: numText(qi) + "_" }),
+      q.short ? n("span", { class: "sec-label", text: q.short }) : null
     ]);
+    var rule = delay(n("hr", { class: "sec-rule draw" }), 0.95);
+
+    // 질문 문장은 단어 단위로 드러난다
+    var qText = n("p", { class: "question" + (text ? "" : " empty") });
+    var w0 = 1.2, afterWords = w0;
+    if (text) {
+      var words = text.split(/\s+/);
+      var step = Math.min(0.06, 1.6 / words.length);
+      words.forEach(function (w, i) {
+        qText.appendChild(delay(n("span", { class: "w", text: w }), w0 + i * step));
+        if (i < words.length - 1) qText.appendChild(document.createTextNode(" "));
+      });
+      afterWords = w0 + words.length * step + 0.25;
+      qText.setAttribute("aria-label", text);
+    } else {
+      qText.textContent = "질문 " + (qi + 1);
+    }
+
+    // 입력 자리는 움직이지 않는다 — 단어가 다 드러난 뒤 조용히 나타날 뿐
+    var block = delay(n("div", { class: "qblock fade-in" }), afterWords);
     if (q.hint) block.appendChild(n("p", { class: "hint", text: q.hint }));
     else if (!text) block.appendChild(n("p", { class: "hint", text: "(질문 준비 중)" }));
 
@@ -191,30 +319,59 @@
     } });
 
     app.appendChild(progress("질문 " + (qi + 1) + " / " + NQ, pct));
+    app.appendChild(sec);
+    app.appendChild(rule);
+    app.appendChild(n("div", { class: "q-wrap" }, [qText]));
     app.appendChild(block);
-    app.appendChild(n("div", { class: "nav" }, [back, next]));
+    app.appendChild(delay(n("div", { class: "nav fade-in" }, [back, next]), afterWords));
+
+    if (!instant) {
+      var r = sec.getBoundingClientRect();
+      var ss = Math.min(1.9, (window.innerWidth * 0.82) / Math.max(r.width, 1));
+      var sx = (window.innerWidth - r.width * ss) / 2 - r.left;
+      var sy = window.innerHeight * 0.38 - r.top - (r.height * ss) / 2;
+      sec.style.setProperty("--ss", ss.toFixed(3));
+      sec.style.setProperty("--sx", sx.toFixed(1) + "px");
+      sec.style.setProperty("--sy", sy.toFixed(1) + "px");
+      sec.classList.add("enter");
+    }
   }
 
   // --- 참고 자료 (이미지 먼저, 스크롤하며 텍스트) ---
   function renderMaterial(qi) {
     var m = QUESTIONS[qi].material;
     var pct = Math.round((idx / LAST) * 100);
+    var key = "m" + qi;
+    var instant = REDUCED || seen[key];
+    seen[key] = true;
+    if (instant) app.classList.add("instant");
+    setProgress(qProgress(qi) + 0.04);
 
-    app.appendChild(progress("질문 " + (qi + 1) + " · 참고 자료", pct));
+    var mLabel = m.source ? "함께 읽은 책" : "곁에 두는 참고";
+    app.appendChild(progress("질문 " + (qi + 1) + " · " + mLabel, pct));
+    app.appendChild(n("div", { class: "m-head" }, [
+      n("p", { class: "eyebrow m-eyebrow", text: mLabel }),
+      n("p", { class: "m-intro", text: m.source
+        ? "여기까지 오는 동안 곁에 두었던 책을 소개할게요."
+        : "방금 남긴 생각 옆에, 이 질문과 이어지는 문장들을 놓아 둘게요." })
+    ]));
+    // 자료 전체를 한 장의 종이로 감싸, 처음 볼 때만 접힌 종이가 펼쳐지듯 연다
+    var paper = n("article", { class: "paper" + (instant ? "" : " unfold") });
+    app.appendChild(n("div", { class: "paper-stage" }, [paper]));
     // 이미지 자리: 파일이 아직 없으면 자리째 숨긴다 (파일만 넣으면 나타남)
     if (m.source) {
       var s = m.source;
       var cover = s.cover ? n("img", { class: "m-source-cover", src: url(s.cover), alt: (s.titleKo || "") + " 표지" }) : null;
       if (cover) cover.addEventListener("error", function () { cover.remove(); });
-      app.appendChild(n("div", { class: "m-source fade-up" }, [
+      paper.appendChild(n("div", { class: "m-source fade-up" }, [
         cover,
         n("div", { class: "m-source-meta" }, [
           n("p", { class: "m-source-title", html: escapeHtml(s.titleKo || "") + (s.titleEn ? "<span>" + escapeHtml(s.titleEn) + "</span>" : "") }),
           s.by ? n("p", { class: "m-source-by", text: s.by }) : null
         ])
       ]));
-      if (s.note) app.appendChild(n("p", { class: "m-source-note", text: s.note }));
-      app.appendChild(n("hr", { class: "point-rule" }));
+      if (s.note) paper.appendChild(n("p", { class: "m-source-note", text: s.note }));
+      paper.appendChild(n("hr", { class: "point-rule" }));
     }
     if (m.img) {
       var img = n("img", { class: "m-img", src: url(m.img), alt: "질문 " + (qi + 1) + " 참고 자료 이미지" });
@@ -223,13 +380,13 @@
       var imgRule = n("hr", { class: "point-rule tight" });
       img.addEventListener("error", function () { imgWrap.remove(); imgRule.remove(); });
       setTimeout(function () { if (img.complete && img.naturalWidth) img.classList.add("shown"); }, 40);
-      app.appendChild(imgWrap);
-      app.appendChild(imgRule);
+      paper.appendChild(imgWrap);
+      paper.appendChild(imgRule);
     }
     var textWrap = n("div", { class: "m-text" }, [n("p", { class: "m-loading", text: "자료를 불러오는 중…" })]);
-    app.appendChild(textWrap);
+    paper.appendChild(textWrap);
     if (m.links && m.links.items && m.links.items.length) {
-      app.appendChild(n("div", { class: "m-links fade-up" }, [
+      paper.appendChild(n("div", { class: "m-links fade-up" }, [
         m.links.label ? n("p", { class: "m-links-label", text: m.links.label }) : null
       ].concat(m.links.items.map(function (l) {
         var yt = youtubeId(l.url);
@@ -244,12 +401,13 @@
       }))));
     }
     var pageCredit = m.credit ? creditLink("m-credit m-credit-page fade-up") : null;
-    if (pageCredit) app.appendChild(pageCredit);
-    if (R.materialNote) app.appendChild(n("p", { class: "m-wait fade-up", text: R.materialNote }));
+    if (pageCredit) paper.appendChild(pageCredit);
+    // 종이 아래 작고 흐린 대기 안내
+    if (R.materialNote) app.appendChild(delay(n("p", { class: "m-wait fade-in", text: R.materialNote }), instant ? 0 : 1.2));
 
-    var back = n("button", { class: "btn-back", text: "← 뒤로", onclick: function () { go(idx - 1); } });
+    var back = n("button", { class: "btn-back", text: "← 내 답 보기", onclick: function () { go(idx - 1); } });
     var next = n("button", { class: "btn-next", text: "다음 →", onclick: function () { go(idx + 1); } });
-    app.appendChild(n("div", { class: "nav" }, [back, next]));
+    app.appendChild(delay(n("div", { class: "nav fade-in" }, [back, next]), instant ? 0 : 1.0));
 
     if (!m.txt) { textWrap.innerHTML = ""; return; }
     loadText(url(m.txt), function (parsed, err) {
@@ -317,6 +475,7 @@
     input.addEventListener("input", function () { state.name = input.value; save(); });
     input.addEventListener("keydown", function (e) { if (e.key === "Enter") make(); });
     function make() { state.name = input.value.trim(); save(); go(idx + 1); }
+    setProgress(0.98);
 
     app.appendChild(progress("카드 만들기", Math.round((idx / LAST) * 100)));
     app.appendChild(n("div", { class: "qblock fade-up" }, [
@@ -332,6 +491,7 @@
 
   // --- 카드 덱 ---
   function renderDone() {
+    setProgress(1);
     var notice = kakaoNotice();
     if (notice) app.appendChild(notice);
     app.appendChild(n("p", { class: "kicker fade-up", text: state.name ? state.name + " 님" : "EGONUTS" }));
@@ -347,8 +507,6 @@
 
     var closingText = (R.closing && R.closing.text) ||
       "이것으로 에고너츠 《" + R.title + "》 토론을 마치겠습니다!\n함께 자리해주셔서 감사합니다!";
-    app.appendChild(n("hr", { class: "point-rule" }));
-    app.appendChild(n("div", { class: "center" }, [n("p", { class: "closing fade-up", html: lines(closingText) })]));
     var books = R.closing && R.closing.books;
     if (books && books.items && books.items.length) {
       app.appendChild(n("div", { class: "center" }, [
@@ -362,9 +520,12 @@
       ]));
     }
     app.appendChild(n("div", { class: "nav" }, [
-      n("button", { class: "btn-back", text: "← 답 고치기", onclick: function () { go(1); } }),
+      n("button", { class: "btn-back", text: "← 답 고치기", onclick: function () { go(FIRST_Q); } }),
       n("span", { class: "spacer" })
     ]));
+    // 마무리 인사는 카드 덱 · 저장 버튼 아래, 화면 맨 끝에
+    app.appendChild(n("hr", { class: "point-rule" }));
+    app.appendChild(n("p", { class: "closing closing--end fade-up", html: lines(closingText) }));
 
     var base = "egonuts_" + EgoExport.safeName(R.title) + (state.name ? "_" + EgoExport.safeName(state.name) : "");
     EgoCards.build(R, state.answers, state.name, PAL).then(function (cards) {
@@ -389,6 +550,8 @@
     });
   }
   function renderFullExport() {
+    setProgress(1);
+    document.body.classList.add("is-done");
     app.appendChild(n("p", { class: "kicker fade-up", text: "관리자" }));
     app.appendChild(n("p", { class: "lead fade-up", text: "발제문 전체 카드" }));
     app.appendChild(n("p", { class: "sub fade-up", text: "표지 · 질문 · 참고 자료를 모두 카드로 만들어요. 답변은 들어가지 않아요." }));
@@ -399,7 +562,7 @@
     app.appendChild(actions);
     app.appendChild(status);
     app.appendChild(n("div", { class: "nav" }, [
-      n("button", { class: "btn-back", text: "← 표지로", onclick: function () { go(0); } }),
+      n("button", { class: "btn-back", text: "← 목차로", onclick: function () { go(1); } }),
       n("span", { class: "spacer" })
     ]));
 
@@ -491,7 +654,8 @@
       EgoTheme.apply(PAL);
       document.title = R.title + " — 에고너츠";
 
-      STEPS = [{ t: "intro" }];
+      STEPS = [{ t: "cover" }, { t: "intro" }];
+      FIRST_Q = STEPS.length;
       QUESTIONS.forEach(function (q, i) {
         STEPS.push({ t: "q", i: i });
         if (q.material) STEPS.push({ t: "m", i: i });
