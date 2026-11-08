@@ -162,13 +162,12 @@
   // --- 질문 카드 ---
   function bodyRows(ctx, q, qi, answers, s) {
     var fields = q.fields || [{}];
-    var multi = fields.length > 1;
     var rows = [];
     var ansW = W - 2 * PX - 34, lh = Math.round(s * 1.72);
     var ls = Math.round(s * 0.78), llh = Math.round(ls * 1.5);
     fields.forEach(function (f, fi) {
       if (fi > 0) rows.push({ kind: "gap", h: Math.round(s * 1.15) });
-      if (multi && f.label) {
+      if (f.label) {
         ctx.font = font(500, ls);
         wrap(ctx, f.label, W - 2 * PX).forEach(function (l) { rows.push({ kind: "label", text: l, s: ls, h: llh }); });
         rows.push({ kind: "gap", h: Math.round(s * 0.45) });
@@ -389,7 +388,7 @@
     var rows = [];
     if (q.hint) { textRows(ctx, rows, q.hint, 30, { w: 300, color: "inkSoft", lh: 1.6 }); rows.push({ kind: "gap", h: 34 }); }
     var fields = q.fields || [{}];
-    if (fields.length > 1) fields.forEach(function (f) {
+    fields.forEach(function (f) {
       if (!f.label) return;
       textRows(ctx, rows, f.label, 30, { w: 500, color: "strong", lh: 1.55 });
       rows.push({ kind: "gap", h: 18 });
