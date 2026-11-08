@@ -508,11 +508,13 @@
   }
   // 첫 줄 = 제목, "로 시작 = 인용, —로 시작 = 출처, §로 시작 = 파트(책의 몇 장), 나머지 = 문단
   // 제목보다 앞에 놓인 § 줄은 제목 위 머리표(pre)로, 본문 중간의 § 줄은 소단락 머리표로 쓴다.
+  // 첫 문단 바로 다음이 출처면 제목을 두지 않는다. 발췌와 그 아래 작은 출처가 한 묶음이다.
   function parseText(text) {
     var ls = text.replace(/\r/g, "").split("\n").map(function (s) { return s.trim(); }).filter(function (s) { return s.length; });
     var pre = [];
     while (ls.length && /^§/.test(ls[0])) pre.push(ls.shift().replace(/^§\s*/, ""));
-    var title = ls.shift() || "";
+    var title = "";
+    if (ls.length && !/^—/.test(ls[0]) && !/^—/.test(ls[1] || "")) title = ls.shift() || "";
     var blocks = ls.map(function (line) {
       if (/^§/.test(line)) return { t: "part", text: line.replace(/^§\s*/, "") };
       if (/^—/.test(line)) return { t: "cite", text: line.replace(/^—\s*/, "") };
