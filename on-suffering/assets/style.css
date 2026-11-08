@@ -150,12 +150,16 @@ input.name-input { font-size: 1.3rem; font-weight: 400; padding-bottom: 14px; }
 .m-part { font-size: 0.8rem; letter-spacing: 0.1em; line-height: 1.6; color: var(--strong); font-weight: 500; margin: 0 0 12px; }
 .m-part-inline { margin: 34px 0 10px; }
 .m-p { font-size: 1.06rem; font-weight: 400; line-height: 1.95; color: var(--ink); margin: 0 0 22px; }
+.m-p:has(+ .m-cite) { margin-bottom: 8px; }
 .m-p strong { font-weight: 600; color: var(--ink); }
 .m-quote {
   margin: 26px 0; padding: 4px 0 4px 20px; border-left: 2px solid var(--point);
   font-size: 1.05rem; line-height: 1.9; font-weight: 400; color: var(--ink);
 }
-.m-cite { margin: -10px 0 26px; text-align: right; font-size: 0.92rem; color: var(--strong); font-weight: 500; }
+.m-cite {
+  margin: 0 0 32px auto; max-width: 34em; text-align: right;
+  font-size: 0.8rem; line-height: 1.6; font-weight: 400; color: var(--ink-soft);
+}
 .m-credit { margin: 8px 0 0; text-align: right; font-size: 0.76rem; font-weight: 300; color: var(--ink-faint); }
 .m-credit a { color: inherit; text-decoration: none; }
 .m-credit a:hover { text-decoration: underline; text-underline-offset: 3px; }

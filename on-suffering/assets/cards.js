@@ -425,11 +425,13 @@
         textRows(ctx, rows, t.title, 40, { w: 600, lh: 1.45 });
         rows.push({ kind: "titlebar", h: 34 });
       }
-      t.blocks.forEach(function (b) {
+      t.blocks.forEach(function (b, bi) {
+        var next = t.blocks[bi + 1];
+        var beforeCite = next && next.t === "cite";
         if (b.t === "part") { rows.push({ kind: "gap", h: 18 }); textRows(ctx, rows, b.text, 24, { w: 500, color: "strong", lh: 2.0, head: true }); }
-        else if (b.t === "quote") { textRows(ctx, rows, b.text, 29, { kind: "quote", indent: 28, lh: 1.72 }); rows.push({ kind: "gap", h: 8 }); }
-        else if (b.t === "cite") { textRows(ctx, rows, "— " + b.text, 24, { w: 500, color: "strong", align: "right", lh: 1.7 }); rows.push({ kind: "gap", h: 22 }); }
-        else { textRows(ctx, rows, b.text, 29, { lh: 1.72 }); rows.push({ kind: "gap", h: 22 }); }
+        else if (b.t === "quote") { textRows(ctx, rows, b.text, 29, { kind: "quote", indent: 28, lh: 1.72, head: beforeCite }); rows.push({ kind: "gap", h: beforeCite ? 8 : 22 }); }
+        else if (b.t === "cite") { textRows(ctx, rows, "— " + b.text, 22, { color: "inkSoft", align: "right", lh: 1.55 }); rows.push({ kind: "gap", h: 30 }); }
+        else { textRows(ctx, rows, b.text, 29, { lh: 1.72, head: beforeCite }); rows.push({ kind: "gap", h: beforeCite ? 8 : 22 }); }
       });
     }
     if (m.links && m.links.items) {
