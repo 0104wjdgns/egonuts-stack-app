@@ -43,8 +43,8 @@
       "material": { "img": "materials/q3.jpg", "txt": "materials/q3.txt" }
     },
     {
-      "text": "그때 받은 친절과 응원은, 이후의 당신에게 어떤 흔적을 남겼나요?",
-      "short": "친절이 남긴 흔적",
+      "text": "누군가에게 받은 친절이, 시간이 흘러 당신의 말이나 행동 속에 남아 있다고 느낀 적이 있나요?",
+      "short": "내 안에 남은 친절",
       "material": { "img": "materials/q4.jpg", "txt": "materials/q4.txt" }
     },
     {
