@@ -35,10 +35,9 @@
   var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var TOUCH = window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
-  // --- 진행도 → 바탕색: 깊은 에스프레소 브라운 → 금빛 → 크림 종이 ---
-  // 중간 밝기 갈색(흰 글자도 검은 글자도 대비가 모자람)은 화면이 걸리지 않는 0.66~0.72 사이로 몰았다.
-  // 질문 4·자료 4(0.60~0.64)까지는 어두운 노을. 중간 밝기는 그 다음 빈 구간에 두고, 질문 5(0.76)부터는 비 갠 뒤의 밝은 하늘.
-  var SKY = [[0, "#1a2330"], [0.22, "#243044"], [0.42, "#3a2a30"], [0.62, "#4a302c"], [0.68, "#6e3d32"], [0.735, "#f0e2d6"], [0.80, "#f7f1ea"], [1, "#f6f3ee"]];
+  // --- 진행도 → 바탕색: 깊은 남색 → 노을 → 비 갠 하늘색 → 밝은 하늘 ---
+  // 질문 4까지는 어두운 노을. 질문 5(0.76)부터 #7FA7C9를 바탕에만 쓰고, 글자는 4.5:1 이상을 유지한다.
+  var SKY = [[0, "#1a2330"], [0.22, "#243044"], [0.42, "#3a2a30"], [0.62, "#4a302c"], [0.68, "#6e3d32"], [0.752, "#7FA7C9"], [0.88, "#c5d7e6"], [1, "#e7eef3"]];
   function hexRgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
   function skyAt(p) {
     for (var i = 1; i < SKY.length; i++) {

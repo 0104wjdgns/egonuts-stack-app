@@ -427,7 +427,7 @@ body.dark ::selection { background: rgba(212, 176, 106, 0.35); }
 /* 노을이 밝은 한가운데: 화면이 머물지 않는 구간. 글자가 묻히지 않게 짙게 */
 body.mid {
   --ink-soft: rgba(44, 33, 28, 0.84); --ink-faint: rgba(44, 33, 28, 0.66); --line: rgba(44, 33, 28, 0.22);
-  --strong: #6e2e1e; --strong-soft: rgba(110, 46, 30, 0.55); --point: #8d3e28; --point-soft: rgba(141, 62, 40, 0.55);
+  --strong: #5c2618; --strong-soft: rgba(92, 38, 24, 0.55); --point: #8d3e28; --point-soft: rgba(141, 62, 40, 0.55);
 }
 body.mid .top-logo { filter: brightness(0.6); }
 
@@ -473,8 +473,8 @@ body.dark { --on-strong: #2b2620; }
 
 /* ---- 5. 완료: 크림에서 아래로 갈수록 따뜻한 금빛, 마무리 인사는 맨 아래 ---- */
 body.is-done {
-  background: linear-gradient(180deg, #f6f3ee 0%, #f6e7df 28%, #f0d2c4 55%, #e7b59f 78%, #d9896e 100%) fixed;
-  background-color: #f6f3ee;
+  background: linear-gradient(180deg, #f6f3ee 0%, #d7e5f0 22%, #7FA7C9 48%, #b7cfe0 78%, #e7eef3 100%) fixed;
+  background-color: #e7eef3;
   --ink-soft: rgba(43, 38, 32, 0.80); --ink-faint: rgba(43, 38, 32, 0.62); --line: rgba(43, 38, 32, 0.2);
 }
 .closing--end { text-align: center; margin: 8px auto 32px; max-width: 30rem; font-size: 1.15rem; line-height: 1.8; }
