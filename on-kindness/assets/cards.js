@@ -144,7 +144,7 @@
         var base = y + L.pad + L.lh * 0.5;
         ctx.textBaseline = "middle";
         ctx.font = font(600, Math.round(L.s * 0.82));
-        ctx.fillStyle = p.strong;
+        ctx.fillStyle = "#8d3e28";
         spaced(ctx, (i < 9 ? "0" : "") + (i + 1), PX, base, 2);
         ctx.font = font(it.empty ? 300 : 400, L.s);
         ctx.fillStyle = it.empty ? p.inkFaint : p.ink;

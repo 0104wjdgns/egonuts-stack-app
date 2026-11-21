@@ -28,8 +28,8 @@
   --paper-ink-faint: rgba(43, 38, 32, 0.50);
   --paper-line: #e6dccb;
 
-  /* 표지 — 비 갠 뒤의 어두운 하늘에 아래쪽 노을이 번지는 시네마틱 다크 */
-  --cover-bg: radial-gradient(120% 70% at 50% 108%, #D9734E 0%, #3a2a30 46%, #1a2330 100%);
+  /* 표지 — 노을은 가운데에 두고, 안내가 앉는 맨 아래는 어두운 하늘로 남긴다 */
+  --cover-bg: radial-gradient(78% 46% at 50% 58%, #c46245 0%, #3a2a30 40%, #1a2330 68%);
   --on-dark: #f6f3ee;
   --on-dark-soft: rgba(246, 243, 238, 0.72);
   --cover-gold: #f0b49a;
@@ -105,7 +105,8 @@ input.name-input { font-size: 1.3rem; font-weight: 400; padding-bottom: 14px; }
   display: flex; gap: 18px; align-items: baseline;
   padding: 15px 0; border-bottom: 1px solid var(--line);
 }
-.toc .num { flex: none; width: 1.7em; font-size: 0.86rem; font-weight: 600; letter-spacing: 0.06em; color: var(--strong); }
+.toc .num { flex: none; width: 1.7em; font-size: 0.86rem; font-weight: 600; letter-spacing: 0.06em; color: #8d3e28; }
+body.dark .toc .num { color: #f3c4b0; }
 .toc .t { font-size: 1.04rem; font-weight: 400; line-height: 1.55; }
 .toc .t.empty { color: var(--ink-faint); font-weight: 300; }
 .cover-source { margin: 26px 0 0; font-size: 0.88rem; color: var(--ink-faint); font-weight: 300; line-height: 1.6; }
@@ -332,9 +333,14 @@ textarea, input[type="text"] { caret-color: var(--strong); }
 .cover-core { margin: 12px 0 0; font-size: clamp(1.12rem, 4.4vw, 1.5rem); line-height: 1.75; font-weight: 400; }
 .cover-core .line { display: block; }
 .cover-src { margin: 28px 0 0; font-size: 0.86rem; font-weight: 300; color: var(--on-dark-soft); }
-.cover-foot { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 48px; color: var(--on-dark-soft); font-size: 0.875rem; }
+.cover-foot {
+  position: relative; z-index: 1; align-self: center; width: fit-content;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  margin-top: 48px; padding: 12px 22px 14px; border-radius: 18px;
+  color: #f6f3ee; background: rgba(26, 35, 48, 0.82); font-size: 0.875rem;
+}
 .cover-chev { width: 18px; height: 18px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); animation: bob 2.2s ease-in-out infinite; }
-@keyframes bob { 0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.5; } 50% { transform: translateY(6px) rotate(45deg); opacity: 1; } }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.9; } 50% { transform: translateY(6px) rotate(45deg); opacity: 1; } }
 .cover.exit { animation: coverExit 0.7s var(--ease-paper) forwards; }
 @keyframes coverExit { to { transform: translateY(-100%); } }
 @media (min-width: 900px) { .cover-title { margin-top: 112px; } }
