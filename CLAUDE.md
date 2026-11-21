@@ -17,6 +17,7 @@
 | `/` | 고독과 상실 | 루트가 발제문. 설정은 `rounds/solitude/` |
 | `/on-death/` | 죽음에 관하여 | 폴더 독립 복사본 |
 | `/on-suffering/` | 고통과 의미 | 폴더 독립 복사본 · **현행 UX 기준 템플릿** |
+| `/on-kindness/` | 친절과 용기 | 폴더 독립 복사본 |
 | `/selflove/` | 사랑과 이기심 | 옛 단독 프로젝트 편입 · DB 없음 |
 
 라이브: https://egonuts-stack-app.vercel.app/
@@ -30,6 +31,7 @@ flowchart LR
   V --> A["/"]
   V --> B["/on-death/"]
   V --> C["/on-suffering/"]
+  V --> K["/on-kindness/"]
   V --> D["/selflove/"]
   V --> E["/on-slug/  새 주제"]
 ```

@@ -7,6 +7,7 @@
 | `/` | 고독과 상실 |
 | `/on-death/` | 죽음에 관하여 |
 | `/on-suffering/` | 고통과 의미 |
+| `/on-kindness/` | 친절과 용기 |
 | `/selflove/` | 사랑과 이기심 (옛 egonuts-selflove 편입 · DB·대시보드 제거) |
 
 각 하위 폴더는 코드를 나눠 쓰지 않는 독립 회차다. 루트(`/`)만 `rounds/solitude/` 설정을 쓴다.
