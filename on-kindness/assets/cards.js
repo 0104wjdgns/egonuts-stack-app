@@ -17,21 +17,6 @@
 
   function font(w, s) { return w + " " + s + "px " + FAMILY; }
 
-  // 카드 색은 이 회차의 코랄(point)과 하늘(sky)만. 글자는 두 색 위에서 4.5:1이 되는 잉크.
-  function forCards(p) {
-    p = p || {};
-    var sky = p.sky || "#7FA7C9";
-    var coral = p.point || "#D9734E";
-    var ink = p.ink || "#2c211c";
-    return {
-      dark: false,
-      bg: sky, bgDeep: coral,
-      ink: ink, inkSoft: ink, inkFaint: ink,
-      line: coral, point: coral, pointSoft: coral,
-      strong: ink, strongSoft: ink
-    };
-  }
-
   // 답안 키: 질문 하나에 칸이 하나면 q1, 여럿이면 q5_1, q5_2 …
   function fieldName(q, qi, fi) {
     var key = q.key || "q" + (qi + 1);
@@ -87,12 +72,16 @@
     return total;
   }
 
-  // --- 공통 바탕: 하늘색 면, 코랄 테두리. 사진은 쓰지 않는다 ---
+  // --- 공통 바탕 ---
   function background(ctx, p) {
-    ctx.fillStyle = p.point;
+    var g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 1.25);
+    g.addColorStop(0, p.bg);
+    g.addColorStop(1, p.bgDeep);
+    ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = p.bg;
-    ctx.fillRect(36, 36, W - 72, H - 72);
+    ctx.strokeStyle = p.dark ? p.line : p.pointSoft;   // 흰 바탕에서는 카드 테두리를 금빛 가는 선으로
+    ctx.lineWidth = 2;
+    ctx.strokeRect(44, 44, W - 88, H - 88);
     ctx.textBaseline = "alphabetic";
   }
   function footer(ctx, p, left, page, total) {
@@ -155,7 +144,7 @@
         var base = y + L.pad + L.lh * 0.5;
         ctx.textBaseline = "middle";
         ctx.font = font(600, Math.round(L.s * 0.82));
-        ctx.fillStyle = p.ink;
+        ctx.fillStyle = p.strong;
         spaced(ctx, (i < 9 ? "0" : "") + (i + 1), PX, base, 2);
         ctx.font = font(it.empty ? 300 : 400, L.s);
         ctx.fillStyle = it.empty ? p.inkFaint : p.ink;
@@ -368,7 +357,7 @@
       return pages.map(function (pg, i) {
         var c = document.createElement("canvas");
         c.width = W; c.height = H;
-        pg.draw(c.getContext("2d"), forCards(palette), i + 1, pages.length);
+        pg.draw(c.getContext("2d"), palette, i + 1, pages.length);
         return { canvas: c, label: pg.label };
       });
     });
@@ -527,7 +516,7 @@
       return pages.map(function (pg, i) {
         var c = document.createElement("canvas");
         c.width = W; c.height = H;
-        pg.draw(c.getContext("2d"), forCards(palette), i + 1, pages.length);
+        pg.draw(c.getContext("2d"), palette, i + 1, pages.length);
         return { canvas: c, label: pg.label };
       });
     });

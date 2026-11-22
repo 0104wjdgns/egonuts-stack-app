@@ -28,7 +28,7 @@
 
   var app = document.getElementById("app");
   var root = document.documentElement;
-  var R, PAL, QUESTIONS, STEPS, LAST, NQ, FIRST_Q;
+  var R, PAL, CARD, QUESTIONS, STEPS, LAST, NQ, FIRST_Q;
   var idx = 0;
   var textCache = {};
   var seen = {}; // 한 번 본 화면은 다시 와도 애니메이션 없이
@@ -596,7 +596,7 @@
     app.appendChild(n("p", { class: "closing closing--end fade-up", html: lines(closingText) }));
 
     var base = "egonuts_" + EgoExport.safeName(R.title) + (state.name ? "_" + EgoExport.safeName(state.name) : "");
-    EgoCards.build(R, state.answers, state.name, PAL).then(function (cards) {
+    EgoCards.build(R, state.answers, state.name, CARD).then(function (cards) {
       return EgoExport.images(cards, base).then(function (imgs) {
         showViewer(viewer, imgs);
         var pdfP = EgoExport.pdf(cards, base).catch(function (e) { return e; });
@@ -645,7 +645,7 @@
     });
     var base = "egonuts_" + EgoExport.safeName(R.title) + "_발제문";
     Promise.all(mats).then(function (list) {
-      return EgoCards.buildFull(R, list, PAL);
+      return EgoCards.buildFull(R, list, CARD);
     }).then(function (cards) {
       return EgoExport.images(cards, base).then(function (imgs) {
         showViewer(viewer, imgs);
@@ -721,6 +721,7 @@
       NQ = QUESTIONS.length;
       PAL = EgoTheme.palette(R.colors);
       EgoTheme.apply(PAL);
+      CARD = EgoTheme.cardPalette(R.colors);
       document.title = R.title + " — 에고너츠";
 
       STEPS = [{ t: "cover" }, { t: "intro" }];
