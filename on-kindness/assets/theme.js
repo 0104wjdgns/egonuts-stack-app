@@ -46,7 +46,14 @@
       bg: toHex(main), bgDeep: toHex(deep),
       ink: toHex(ink), inkSoft: rgba(ink, dark ? 0.62 : 0.68), inkFaint: rgba(ink, dark ? 0.34 : 0.5), line: rgba(ink, 0.13),
       point: toHex(point), pointSoft: rgba(point, 0.55),
-      strong: toHex(strong), strongSoft: rgba(strong, 0.55)
+      strong: toHex(strong), strongSoft: rgba(strong, 0.55),
+      // 카드 덱이 페이지와 같은 표지·하늘을 쓰도록. 없으면 이 회차 CSS와 같은 기본값.
+      sky: colors.sky || "#7FA7C9",
+      paper: colors.paper || "#f6f0e6",
+      onDark: colors.onDark || "#f6f3ee",
+      coverGold: colors.coverGold || "#f0b49a",
+      night: colors.night || "#1a2330",
+      cover: (colors.cover && colors.cover.length === 3) ? colors.cover.slice() : ["#c46245", "#3a2a30", "#1a2330"]
     };
   }
 

@@ -14,8 +14,69 @@
   var FOOT = H - 108;       // 바닥글 기준선
   var BODY_BOTTOM = H - 186;
   var FAMILY = '"Noto Serif KR", ui-serif, Georgia, serif';
+  var BAND = 392;           // 질문 카드 사진 머리
+  var BAND_CONT = 148;
 
   function font(w, s) { return w + " " + s + "px " + FAMILY; }
+
+  // 페이지 CSS와 같은 표지·종이·하늘. palette(round.json colors)가 주면 그 값을 쓴다.
+  function mood(p) {
+    p = p || {};
+    return {
+      sky: p.sky || "#7FA7C9",
+      paper: p.paper || "#f6f0e6",
+      onDark: p.onDark || "#f6f3ee",
+      onDarkSoft: "rgba(246, 243, 238, 0.82)",
+      coverGold: p.coverGold || "#f0b49a",
+      cover: (p.cover && p.cover.length === 3) ? p.cover : ["#c46245", "#3a2a30", "#1a2330"],
+      night: p.night || "#1a2330",
+      inkSoft: "rgba(44, 33, 28, 0.78)"
+    };
+  }
+  function coverImage(ctx, img, x, y, w, h) {
+    var ir = img.naturalWidth / img.naturalHeight, r = w / h;
+    var sx, sy, sw, sh;
+    if (ir > r) { sh = img.naturalHeight; sw = sh * r; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+    else { sw = img.naturalWidth; sh = sw / r; sx = 0; sy = (img.naturalHeight - sh) * 0.42; }
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  }
+  function scrim(ctx, x, y, w, h) {
+    ctx.fillStyle = "rgba(26, 35, 48, 0.22)";
+    ctx.fillRect(x, y, w, h);
+    var g = ctx.createLinearGradient(0, y + h * 0.25, 0, y + h);
+    g.addColorStop(0, "rgba(26, 35, 48, 0)");
+    g.addColorStop(1, "rgba(26, 35, 48, 0.55)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x, y, w, h);
+  }
+  function logoMark(ctx, img, x, y, s) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x + s / 2, y + s / 2, s / 2, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(26, 35, 48, 0.82)";
+    ctx.fill();
+    ctx.clip();
+    ctx.drawImage(img, x + 5, y + 5, s - 10, s - 10);
+    ctx.restore();
+  }
+  function loadImg(src) {
+    return new Promise(function (res) {
+      if (!src) { res(null); return; }
+      var img = new Image();
+      img.onload = function () { res(img.naturalWidth ? img : null); };
+      img.onerror = function () { res(null); };
+      img.src = src;
+    });
+  }
+  function loadDeckImages(R) {
+    var jobs = (R.questions || []).map(function (q) {
+      return loadImg(q.material && q.material.img);
+    });
+    jobs.push(loadImg("assets/logo.png"));
+    return Promise.all(jobs).then(function (list) {
+      return { photos: list.slice(0, -1), logo: list[list.length - 1] };
+    });
+  }
 
   // 답안 키: 질문 하나에 칸이 하나면 q1, 여럿이면 q5_1, q5_2 …
   function fieldName(q, qi, fi) {
@@ -72,38 +133,35 @@
     return total;
   }
 
-  // --- 공통 바탕 ---
+  // --- 공통 바탕: 크림 종이 + 위쪽 하늘색 실. 코랄 테두리는 두지 않는다 ---
   function background(ctx, p) {
-    var g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 1.25);
-    g.addColorStop(0, p.bg);
-    g.addColorStop(1, p.bgDeep);
-    ctx.fillStyle = g;
+    var m = mood(p);
+    ctx.fillStyle = m.paper;
     ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = p.dark ? p.line : p.pointSoft;   // 흰 바탕에서는 카드 테두리를 금빛 가는 선으로
-    ctx.lineWidth = 2;
-    ctx.strokeRect(44, 44, W - 88, H - 88);
+    ctx.fillStyle = m.sky;
+    ctx.fillRect(0, 0, W, 10);
     ctx.textBaseline = "alphabetic";
   }
   function footer(ctx, p, left, page, total) {
     ctx.font = font(400, 24);
-    ctx.fillStyle = p.inkFaint;
+    ctx.fillStyle = mood(p).inkSoft;
     ctx.textBaseline = "alphabetic";
     var numW = spaced(ctx, page + " / " + total, W - PX, FOOT, 2, "right");
     if (left) { ctx.textAlign = "left"; ctx.fillText(ellipsize(ctx, left, W - 2 * PX - numW - 40), PX, FOOT); }
   }
 
-  // --- 표지 겸 목차 ---
-  function coverPage(ctx, R, name, subtitle) {
+  // --- 표지 겸 목차: 위는 페이지 표지(깊은 노을), 아래는 크림 목차 ---
+  function coverPage(ctx, R, name, subtitle, logo) {
     var qs = R.questions;
     var tocW = W - 2 * PX - 86;
+    var SPLIT = 612;
+    var tocTop = SPLIT + 48;
+    var tocBottom = FOOT - 56;
 
-    ctx.font = font(500, 84);
-    var titleLines = clampLines(ctx, wrap(ctx, R.title, W - 2 * PX), 2, W - 2 * PX);
-    var titleBottom = TOP + 130 + (titleLines.length - 1) * 108;
-    var tocTop = titleBottom + 196;
-    var tocBottom = FOOT - 70;
+    ctx.font = font(300, 92);
+    var titleLines = clampLines(ctx, wrap(ctx, R.title, W - 2 * PX - 120), 2, W - 2 * PX - 120);
+    var titleY = 292;
 
-    // 목차 글자 크기 맞추기
     var layout;
     [34, 31, 29, 27, 25, 23].some(function (s) {
       ctx.font = font(400, s);
@@ -120,38 +178,53 @@
     });
 
     return function draw(ctx, p, page, total) {
-      background(ctx, p);
-      ctx.font = font(500, 26);
-      ctx.fillStyle = p.inkFaint;
-      spaced(ctx, "EGONUTS" + (R.date ? "  ·  " + R.date : ""), PX, TOP, 5);
+      var m = mood(p);
+      var g = ctx.createRadialGradient(W * 0.5, H * 0.70, 20, W * 0.5, H * 0.70, H * 0.85);
+      g.addColorStop(0, m.cover[0]);
+      g.addColorStop(0.40, m.cover[1]);
+      g.addColorStop(0.68, m.cover[2]);
+      g.addColorStop(1, m.cover[2]);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = m.paper;
+      ctx.fillRect(0, SPLIT + 12, W, H - SPLIT - 12);
+      ctx.fillStyle = m.sky;
+      ctx.fillRect(0, SPLIT, W, 12);
 
-      ctx.font = font(500, 84);
-      ctx.fillStyle = p.ink;
+      ctx.textBaseline = "alphabetic";
       ctx.textAlign = "left";
-      titleLines.forEach(function (l, i) { ctx.fillText(l, PX, TOP + 130 + i * 108); });
+      ctx.font = font(500, 24);
+      ctx.fillStyle = m.onDarkSoft;
+      spaced(ctx, "EGONUTS" + (R.date ? "  ·  " + R.date : ""), PX, 156, 4);
+      if (logo) logoMark(ctx, logo, W - PX - 86, 108, 86);
 
-      ctx.fillStyle = p.point;
-      ctx.fillRect(PX, titleBottom + 46, 64, 3);
+      ctx.font = font(300, 92);
+      ctx.fillStyle = m.onDark;
+      titleLines.forEach(function (l, i) { ctx.fillText(l, PX, titleY + i * 108); });
 
-      ctx.font = font(300, 32);
-      ctx.fillStyle = p.inkSoft;
-      ctx.fillText(ellipsize(ctx, subtitle || (name ? name + "의 토론 로그" : "나의 토론 로그"), W - 2 * PX), PX, titleBottom + 122);
+      var ruleY = titleY + (titleLines.length - 1) * 108 + 36;
+      ctx.fillStyle = m.coverGold;
+      ctx.fillRect(PX, ruleY, 56, 3);
+
+      ctx.font = font(400, 32);
+      ctx.fillStyle = m.onDarkSoft;
+      ctx.fillText(ellipsize(ctx, subtitle || (name ? name + "의 토론 로그" : "나의 토론 로그"), W - 2 * PX), PX, ruleY + 72);
 
       var y = tocTop, L = layout;
-      ctx.fillStyle = p.line;
+      ctx.fillStyle = "rgba(44, 33, 28, 0.16)";
       ctx.fillRect(PX, y, W - 2 * PX, 1);
       L.items.forEach(function (it, i) {
         var base = y + L.pad + L.lh * 0.5;
         ctx.textBaseline = "middle";
-        ctx.font = font(600, Math.round(L.s * 0.82));
-        ctx.fillStyle = "#8d3e28";
+        ctx.font = font(500, Math.round(L.s * 0.86));
+        ctx.fillStyle = p.strong;
         spaced(ctx, (i < 9 ? "0" : "") + (i + 1), PX, base, 2);
         ctx.font = font(it.empty ? 300 : 400, L.s);
-        ctx.fillStyle = it.empty ? p.inkFaint : p.ink;
+        ctx.fillStyle = it.empty ? m.inkSoft : p.ink;
         ctx.textAlign = "left";
         it.lines.forEach(function (l, j) { ctx.fillText(l, PX + 86, base + j * L.lh); });
         y += it.h;
-        ctx.fillStyle = p.line;
+        ctx.fillStyle = "rgba(44, 33, 28, 0.16)";
         ctx.fillRect(PX, y, W - 2 * PX, 1);
       });
       ctx.textBaseline = "alphabetic";
@@ -163,7 +236,7 @@
   function bodyRows(ctx, q, qi, answers, s) {
     var fields = q.fields || [{}];
     var rows = [];
-    var ansW = W - 2 * PX - 34, lh = Math.round(s * 1.72);
+    var ansW = W - 2 * PX, lh = Math.round(s * 1.72);
     var ls = Math.round(s * 0.78), llh = Math.round(ls * 1.5);
     fields.forEach(function (f, fi) {
       if (fi > 0) rows.push({ kind: "gap", h: Math.round(s * 1.15) });
@@ -183,20 +256,27 @@
   }
   function rowsHeight(rows) { return rows.reduce(function (a, r) { return a + r.h; }, 0); }
 
-  function questionHeader(ctx, q, qi) {
-    ctx.font = font(500, 46);
+  function questionHeader(ctx, q, qi, band) {
+    var qSize = 42, lh = 64;
+    ctx.font = font(500, qSize);
     var text = (q.text || "").trim();
     var lines = text ? wrap(ctx, text, W - 2 * PX) : ["질문 " + (qi + 1)];
-    return { lines: lines, empty: !text, bodyTop: TOP + 120 + (lines.length - 1) * 68 + 74 };
+    var numY = band + 86;
+    var textY = numY + 84;
+    var bodyTop = textY + (lines.length - 1) * lh + 52;
+    return { lines: lines, empty: !text, bodyTop: bodyTop, lh: lh, qSize: qSize, band: band, numY: numY, textY: textY };
   }
 
-  function questionPages(ctx, R, q, qi, answers, name) {
-    var head = questionHeader(ctx, q, qi);
+  function questionPages(ctx, R, q, qi, answers, name, imgs) {
+    var photo = imgs && imgs.photos ? imgs.photos[qi] : null;
+    var logo = imgs && imgs.logo;
+    var band = photo ? (q.finale ? 460 : BAND) : 200;
+    var head = questionHeader(ctx, q, qi, band);
     var footLeft = R.title + (name ? " · " + name : "");
     var pages = [];
     var avail = BODY_BOTTOM - head.bodyTop;
 
-    // 마무리 카드: 답을 가운데 크게
+    // 마무리 카드: 답을 가운데 크게. 바탕은 페이지 완료 화면의 옅은 하늘.
     if (q.finale && (q.fields || [{}]).length === 1) {
       var a = (answers[fieldName(q, qi, 0)] || "").trim();
       var fin = null;
@@ -209,13 +289,13 @@
       });
       if (fin) {
         pages.push(function (ctx, p, page, total) {
-          drawQuestionTop(ctx, p, q, qi, head, false);
+          drawQuestionTop(ctx, p, q, qi, head, false, photo, logo, true);
           var blockH = fin.lines.length * fin.lh;
           var y0 = head.bodyTop + (avail - blockH) / 2 + 20;
           ctx.fillStyle = p.point;
           ctx.fillRect(W / 2 - 24, y0 - 56, 48, 2);
           ctx.font = font(500, fin.s);
-          ctx.fillStyle = a ? p.ink : p.inkFaint;
+          ctx.fillStyle = a ? p.ink : mood(p).inkSoft;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           fin.lines.forEach(function (l, i) { ctx.fillText(l, W / 2, y0 + i * fin.lh + fin.lh / 2); });
@@ -239,7 +319,7 @@
     else {
       // 어차피 나눌 거라면 읽기 좋은 크기로 나눈다
       rows = bodyRows(ctx, q, qi, answers, 32);
-      var contTop = TOP + 96, cur = [], used = 0, limit = avail;
+      var contTop = (photo ? BAND_CONT : 0) + 78 + 70, cur = [], used = 0, limit = avail;
       rows.forEach(function (r) {
         if (!cur.length && r.kind === "gap") return;
         if (used + r.h > limit && cur.length) {
@@ -252,7 +332,7 @@
     }
     chunks.forEach(function (chunk, ci) {
       pages.push(function (ctx, p, page, total) {
-        var y = drawQuestionTop(ctx, p, q, qi, head, ci > 0);
+        var y = drawQuestionTop(ctx, p, q, qi, head, ci > 0, photo, logo, false);
         drawRows(ctx, p, chunk, y);
         footer(ctx, p, footLeft, page, total);
       });
@@ -260,26 +340,64 @@
     return pages;
   }
 
-  function drawQuestionTop(ctx, p, q, qi, head, cont) {
-    background(ctx, p);
-    ctx.font = font(600, 34);
-    ctx.fillStyle = p.strong;
-    var w = spaced(ctx, "Q" + (qi + 1), PX, TOP, 3);
-    if (cont) {
-      ctx.font = font(400, 26);
-      ctx.fillStyle = p.inkFaint;
-      ctx.fillText("  ·  이어서", PX + w, TOP);
+  function drawQuestionTop(ctx, p, q, qi, head, cont, photo, logo, finale) {
+    var m = mood(p);
+    ctx.fillStyle = m.paper;
+    ctx.fillRect(0, 0, W, H);
+    var band = cont ? (photo ? BAND_CONT : 0) : (head.band || 0);
+    if (band && photo) {
+      coverImage(ctx, photo, 0, 0, W, band);
+      scrim(ctx, 0, 0, W, band);
+    } else if (band) {
+      var dusk = ctx.createLinearGradient(0, 0, 0, band);
+      dusk.addColorStop(0, m.cover[2]);
+      dusk.addColorStop(0.62, m.cover[1]);
+      dusk.addColorStop(1, m.cover[0]);
+      ctx.fillStyle = dusk;
+      ctx.fillRect(0, 0, W, band);
     }
-    ctx.font = font(500, 22);
-    ctx.fillStyle = p.inkFaint;
-    spaced(ctx, "EGONUTS", W - PX, TOP, 5, "right");
-    ctx.fillStyle = p.point;
-    ctx.fillRect(PX, TOP + 30, 48, 2);
-    if (cont) return TOP + 96;
-    ctx.font = font(500, 46);
-    ctx.fillStyle = head.empty ? p.inkFaint : p.ink;
+    if (band) {
+      ctx.fillStyle = m.sky;
+      ctx.fillRect(0, band, W, 8);
+      var wash = ctx.createLinearGradient(0, band + 8, 0, band + 8 + (finale ? 340 : 200));
+      wash.addColorStop(0, finale ? "rgba(127, 167, 201, 0.42)" : "rgba(127, 167, 201, 0.26)");
+      wash.addColorStop(1, "rgba(127, 167, 201, 0)");
+      ctx.fillStyle = wash;
+      ctx.fillRect(0, band + 8, W, finale ? 340 : 200);
+    } else {
+      ctx.fillStyle = m.sky;
+      ctx.fillRect(0, 0, W, 10);
+    }
+    if (logo) logoMark(ctx, logo, W - 36 - 78, 28, 78);
+
+    ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
-    head.lines.forEach(function (l, i) { ctx.fillText(l, PX, TOP + 120 + i * 68); });
+    var num = (qi < 9 ? "0" : "") + (qi + 1);
+    if (cont) {
+      var yNum = band + 78;
+      ctx.font = font(300, 48);
+      ctx.fillStyle = p.strong;
+      var w = spaced(ctx, num, PX, yNum, 1);
+      ctx.font = font(400, 26);
+      ctx.fillStyle = m.inkSoft;
+      ctx.fillText("   이어서", PX + w, yNum);
+      ctx.fillStyle = p.point;
+      ctx.fillRect(PX, yNum + 24, 56, 3);
+      return yNum + 70;
+    }
+    ctx.font = font(300, 60);
+    ctx.fillStyle = p.strong;
+    var nw = spaced(ctx, num, PX, head.numY, 1);
+    if (q.short) {
+      ctx.font = font(400, 26);
+      ctx.fillStyle = p.strong;
+      ctx.fillText(ellipsize(ctx, q.short, W - 2 * PX - nw - 28), PX + nw + 22, head.numY - 2);
+    }
+    ctx.fillStyle = p.point;
+    ctx.fillRect(PX, head.numY + 24, 56, 3);
+    ctx.font = font(500, head.qSize);
+    ctx.fillStyle = head.empty ? m.inkSoft : p.ink;
+    head.lines.forEach(function (l, i) { ctx.fillText(l, PX, head.textY + i * head.lh); });
     return head.bodyTop;
   }
 
@@ -292,11 +410,9 @@
         ctx.fillStyle = p.strong;
         ctx.fillText(r.text, PX, y + r.h / 2);
       } else if (r.kind === "ans") {
-        ctx.fillStyle = p.point;
-        ctx.fillRect(PX, y, 3, r.h);
         ctx.font = font(400, r.s);
-        ctx.fillStyle = r.empty ? p.inkFaint : p.ink;
-        ctx.fillText(r.text, PX + 34, y + r.h / 2);
+        ctx.fillStyle = r.empty ? mood(p).inkSoft : p.ink;
+        ctx.fillText(r.text, PX, y + r.h / 2);
       } else if (r.kind === "text") {            // 일반 글줄: weight · color · indent · align 지정
         ctx.font = font(r.w || 400, r.s);
         ctx.fillStyle = p[r.color || "ink"];
@@ -344,11 +460,11 @@
       texts.push(q.text || "", q.short || "");
       (q.fields || [{}]).forEach(function (f, fi) { texts.push(f.label || "", answers[fieldName(q, qi, fi)] || ""); });
     });
-    return loadFonts(texts).then(function () {
+    return loadFonts(texts).then(function () { return loadDeckImages(R); }).then(function (imgs) {
       var scratch = document.createElement("canvas").getContext("2d");
-      var pages = [{ label: "00_표지", draw: coverPage(scratch, R, name) }];
+      var pages = [{ label: "00_표지", draw: coverPage(scratch, R, name, null, imgs.logo) }];
       R.questions.forEach(function (q, qi) {
-        var qp = questionPages(scratch, R, q, qi, answers, name);
+        var qp = questionPages(scratch, R, q, qi, answers, name, imgs);
         qp.forEach(function (draw, k) {
           var num = (qi + 1 < 10 ? "0" : "") + (qi + 1);
           pages.push({ label: num + "_Q" + (qi + 1) + (k ? "-" + (k + 1) : ""), draw: draw });
@@ -383,8 +499,8 @@
     return { kind: "image", img: img, w: Math.round(img.naturalWidth * r), h: Math.round(img.naturalHeight * r), align: align };
   }
 
-  function questionOnlyPage(ctx, R, q, qi) {
-    var head = questionHeader(ctx, q, qi);
+  function questionOnlyPage(ctx, R, q, qi, photo) {
+    var head = questionHeader(ctx, q, qi, photo ? BAND : 200);
     var rows = [];
     if (q.hint) { textRows(ctx, rows, q.hint, 30, { w: 300, color: "inkSoft", lh: 1.6 }); rows.push({ kind: "gap", h: 34 }); }
     var fields = q.fields || [{}];
@@ -394,7 +510,7 @@
       rows.push({ kind: "gap", h: 18 });
     });
     return function (ctx, p, page, total) {
-      var y = drawQuestionTop(ctx, p, q, qi, head, false);
+      var y = drawQuestionTop(ctx, p, q, qi, head, false, photo, null, !!q.finale);
       drawRows(ctx, p, rows, y);
       footer(ctx, p, R.title + " · 발제문", page, total);
     };
@@ -453,7 +569,7 @@
     ctx.fillStyle = p.strong;
     var w = spaced(ctx, "Q" + (qi + 1), PX, TOP, 3);
     ctx.font = font(400, 26);
-    ctx.fillStyle = p.inkFaint;
+    ctx.fillStyle = mood(p).inkSoft;
     ctx.fillText("  ·  참고 자료" + (cont ? "  ·  이어서" : ""), PX + w, TOP);
     ctx.font = font(500, 22);
     spaced(ctx, "EGONUTS", W - PX, TOP, 5, "right");
@@ -501,12 +617,13 @@
       if (mat && mat.parsed) texts.push((mat.parsed.pre || []).join(" "), mat.parsed.title, mat.parsed.blocks.map(function (b) { return b.text; }).join(" "));
     });
     if (R.imageCredit) texts.push(R.imageCredit.text);
-    return loadFonts(texts).then(function () {
+    return loadFonts(texts).then(function () { return loadDeckImages(R); }).then(function (imgs) {
       var scratch = document.createElement("canvas").getContext("2d");
-      var pages = [{ label: "00_표지", draw: coverPage(scratch, R, "", "발제문") }];
+      var pages = [{ label: "00_표지", draw: coverPage(scratch, R, "", "발제문", imgs.logo) }];
       R.questions.forEach(function (q, qi) {
         var num = (qi + 1 < 10 ? "0" : "") + (qi + 1);
-        pages.push({ label: num + "_Q" + (qi + 1), draw: questionOnlyPage(scratch, R, q, qi) });
+        var photo = (mats[qi] && mats[qi].img) || imgs.photos[qi];
+        pages.push({ label: num + "_Q" + (qi + 1), draw: questionOnlyPage(scratch, R, q, qi, photo) });
         if (q.material && mats[qi]) {
           materialPages(scratch, R, q, qi, mats[qi]).forEach(function (draw, k) {
             pages.push({ label: num + "_Q" + (qi + 1) + "_자료" + (k ? "-" + (k + 1) : ""), draw: draw });

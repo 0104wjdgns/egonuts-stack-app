@@ -5,7 +5,13 @@
     "main": "#fff8f4",
     "point": "#D9734E",
     "ink": "#2c211c",
-    "strong": "#8d3e28"
+    "strong": "#8d3e28",
+    "sky": "#7FA7C9",
+    "paper": "#f6f0e6",
+    "onDark": "#f6f3ee",
+    "coverGold": "#f0b49a",
+    "night": "#1a2330",
+    "cover": ["#c46245", "#3a2a30", "#1a2330"]
   },
   "intro": {
     "coreLabel": "핵심 질문",
