@@ -73,14 +73,16 @@
     if (meta) meta.setAttribute("content", p.bg);
   }
 
-  // 카드만: 하늘색을 깊게 눌러 바탕, 코랄을 포인트로. 페이지에 쓰는 palette()와는 따로다.
-  function cardPalette(colors) {
-    colors = colors || {};
-    var sky = hex(colors.sky || "#7FA7C9");
-    return palette({
-      main: toHex(mix(sky, [0, 0, 0], 0.78)),
-      point: colors.point || "#D9734E"
-    });
+  // 카드만. 그리기 틀은 그대로 두고 색만 이 값으로 둔다. 페이지 palette()와는 따로다.
+  function cardPalette() {
+    var bg = "#5a82a6", accent = "#F6B08F", ink = "#ffffff", muted = "#dbe6ef", border = "#8fb0cc";
+    return {
+      dark: true,
+      bg: bg, bgDeep: bg,
+      ink: ink, inkSoft: muted, inkFaint: muted,
+      line: border, point: accent, pointSoft: border,
+      strong: accent, strongSoft: accent
+    };
   }
 
   window.EgoTheme = { palette: palette, apply: apply, cardPalette: cardPalette };
