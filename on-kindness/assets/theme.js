@@ -73,5 +73,15 @@
     if (meta) meta.setAttribute("content", p.bg);
   }
 
-  window.EgoTheme = { palette: palette, apply: apply };
+  // 카드만: 하늘색을 깊게 눌러 바탕, 코랄을 포인트로. 페이지에 쓰는 palette()와는 따로다.
+  function cardPalette(colors) {
+    colors = colors || {};
+    var sky = hex(colors.sky || "#7FA7C9");
+    return palette({
+      main: toHex(mix(sky, [0, 0, 0], 0.78)),
+      point: colors.point || "#D9734E"
+    });
+  }
+
+  window.EgoTheme = { palette: palette, apply: apply, cardPalette: cardPalette };
 })();
